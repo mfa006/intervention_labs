@@ -1,4 +1,6 @@
-import numpy as np # Import Numpy
+import numpy as np 
+from scipy.linalg import block_diag
+
 
 def DH(d, theta, a, alpha):
     '''
@@ -16,6 +18,21 @@ def DH(d, theta, a, alpha):
     '''
     # 1. Build matrices representing elementary transformations (based on input parameters).
     # 2. Multiply matrices in the correct order (result in T).
+    
+    M1 = block_diag(np.identity(2),np.identity(2))
+    M1[2,3] = d
+
+    M2 = block_diag(np.array([[np.cos(theta), -np.sin(theta)],
+                   [np.sin(theta), np.cos(theta)]],),1,1)
+    
+    M3 = block_diag(np.identity(2),np.identity(2))
+    M3[0,-1] = a
+
+    M4 = block_diag(1,np.array([[np.cos(alpha), -np.sin(alpha)],
+                   [np.sin(alpha), np.cos(alpha)]],),1)
+    
+    T = M1@M2@M3@M4    #
+
     return T
 
 def kinematics(d, theta, a, alpha):
@@ -38,6 +55,9 @@ def kinematics(d, theta, a, alpha):
     # 1. Compute the DH transformation matrix.
     # 2. Compute the resulting accumulated transformation from the base frame.
     # 3. Append the computed transformation to T.
+    for d_i,theta_i,a_i,alpha_i in zip(d,theta,a,alpha):
+        T.append(T[-1]@DH(d_i,theta_i,a_i,alpha_i))
+
     return T
 
 # Inverse kinematics
@@ -58,6 +78,16 @@ def jacobian(T, revolute):
     #   a. Extract z and o.
     #   b. Check joint type.
     #   c. Modify corresponding column of J.
+    J = []
+
+    O_n = T[-1][:3,-1]  # points of last transform
+    for Ti,rev_flag in zip(T,revolute):
+        Ri = Ti[:3,:3]  #firsTi 3x3 matrix 
+        Oi = Ti[:3,-1]
+        zi = Ri[:3,-1]
+        J.append(np.vstack([(np.cross(rev_flag*zi,(O_n-Oi))+(1-rev_flag)*zi).reshape(3,1),(rev_flag*zi).reshape(3,1)]))
+
+
     return J
 
 # Damped Least-Squares
@@ -72,7 +102,10 @@ def DLS(A, damping):
         Returns:
         (Numpy array): inversion of the input matrix
     '''
-    return # Implement the formula to compute the DLS of matrix A.
+    Jq = jacobian(A)
+    DLS = np.array(Jq).transpose@np.invert(np.array(Jq)@np.array(Jq).transpose+(damping**2)*np.identity(2))
+
+    return DLS # Implement the formula to compute the DLS of matrix A.
 
 # Extract characteristic points of a robot projected on X-Y plane
 def robotPoints2D(T):

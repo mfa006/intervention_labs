@@ -9,7 +9,7 @@ q = np.array([0.2, 0.5])  # rotation around Z-axis (theta)
 a = np.array([0.75, 0.5]) # displacement along X-axis
 alpha = np.zeros(2)       # rotation around X-axis 
 revolute = [True, True]
-sigma_d = np.array([0.0, 1.0])
+sigma_d = np.array([1.0, 1.0])
 K = np.diag([1, 1])
 
 # Simulation params
@@ -44,9 +44,9 @@ def simulate(t):
     J = jacobian(T, revolute) # Implement!
 
     # Update control
-    sigma =         # Position of the end-effector
-    err =           # Control error
-    dq =            # Control solution
+    sigma_d = np.array([1.0, 1.0])     # Position of the end-effector
+    err =  0.1       # Control error
+    dq = np.array([0.6,0.6])#np.ones(2)# Control solution
     q += dt * dq
     
     # Update drawing
