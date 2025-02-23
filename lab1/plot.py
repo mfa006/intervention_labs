@@ -44,8 +44,8 @@ def plot_control_error(transpose_file, pinverse_file, DLS_file, simulation_time=
     plt.ylabel('Control Error Norm')
     plt.title('Evolution of Control Error Norm over Time')
     plt.legend()
+    plt.savefig("plot.png")
     plt.grid(True)
     plt.show()
-
 # Usage
-plot_control_error('transpose_errors.npy', 'pinverse_errors.npy', 'DLS_errors.npy')
+# plot_control_error('plot_data/transpose_errors.npy', 'plot_data/pinverse_errors.npy', 'plot_data/DLS_errors.npy')

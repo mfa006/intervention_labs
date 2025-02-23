@@ -2,6 +2,7 @@
 from lab2_robotics import * # Includes numpy import
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
+from plot import *
 
 # Robot definition
 d = np.zeros(2)           # displacement along Z-axis
@@ -29,6 +30,7 @@ PPy = []
 
 # Lists to store control error norms
 transpose_errors, pinverse_errors, DLS_errors = [], [], []
+joint_pos = []
 
 # Simulation initialization
 def init():
@@ -52,20 +54,26 @@ def control(type: str, J: np.ndarray, lambda_: float = 0.1) -> np.ndarray:
         raise ValueError(f"Invalid controller type '{type}'. Choose from {list(methods.keys())}.")
 
 # --- Helper Function for Error Norm ---
-def update_error_norm(err: np.ndarray, controller_solution: str):
+def update_error_norm(pose,err,controller_solution):
     """Computes the error norm and appends it to the corresponding list based on the controller type."""
     error_norm = np.linalg.norm(err)
     
     error_dict = {
         "transpose": transpose_errors,
         "pinverse": pinverse_errors,
-        "DLS": DLS_errors
+        "DLS": DLS_errors, 
+        "joint_pose": joint_pos,
     }
 
     if controller_solution in error_dict:
         error_dict[controller_solution].append(error_norm)
+        error_dict["joint_pose"].append(pose)
     else:
         raise ValueError(f"Invalid controller type '{controller_solution}'. Choose from {list(error_dict.keys())}.")
+
+def snhow_n_save_plots():
+    """saves the joint position""" 
+    plot_control_error('plot_data/transpose_errors.npy', 'plot_data/pinverse_errors.npy', 'plot_data/DLS_errors.npy')
 
 
 # Simulation loop
@@ -76,12 +84,7 @@ def simulate(t,controller_solution):
     # Update robot
     T = kinematics(d, q, a, alpha)
     J = jacobian(T, revolute) # Implement!
-
-    # Update control
-    # sigma_d = np.array([1.0, 1.0])     # Position of the end-effector
-    # err =  0.1       # Control error
-    # dq = np.array([0.6,0.6])#np.ones(2)# Control solution
-
+ 
     # Update control
     #extracting the robot pos in 2D plane for sigma
     P = robotPoints2D(T)
@@ -89,12 +92,12 @@ def simulate(t,controller_solution):
     P_sigma = [P[0, -1], P[1, -1]]
     sigma = np.array(P_sigma)      # Position of the end-effector
     err =  sigma_d - sigma        # Control error  ~sigma_E = sigma_E,d - sigma_E
-    update_error_norm(err, controller_solution)
     print(err)
     delta_f = K @ err #feedback action   df = K x ~sigma_E
     # X_dot_E = sigma_dot_E + delta_f  # No compensation sigma_dot_E ->0
     dq =control(controller_solution, J[0:2, :]) @ delta_f  # vel_vect = control_sol x delta_f
     q += dt * dq # velocity to position
+    update_error_norm(q,err, controller_solution)
     
     # Update drawing
     # P = robotPoints2D(T)
@@ -110,9 +113,10 @@ def simulate(t,controller_solution):
 #this is where we select the control solution
 controller_solution = "DLS"#["transpose","pinverse","DLS"] #transpose solution, pinverse solution and DLS
 error_files = {
-    "transpose": "transpose_errors.npy",
-    "pinverse": "DLS.npy",
-    "DLS": "DLS_errors.npy"
+    "transpose": "plot_data/transpose_errors.npy",
+    "pinverse": "plot_data/DLS.npy",
+    "DLS": "plot_data/DLS_errors.npy",
+    "joint_pose": "plot_data/joint_pose.npy"
 }
 
 # Run simulation with the current controller
@@ -126,5 +130,8 @@ plt.show()
 # Save errors to file after simulation is finished
 if controller_solution in error_files:
     np.save(error_files[controller_solution], eval(f"{controller_solution}_errors"))
+    np.save(error_files["joint_pose"], "joint_pose")
 else:
     raise ValueError(f"Invalid controller type '{controller_solution}' for saving errors.")
+
+snhow_n_save_plots()
