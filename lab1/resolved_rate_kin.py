@@ -10,7 +10,7 @@ q = np.array([0.2, 0.5])  # rotation around Z-axis (theta)
 a = np.array([0.75, 0.5]) # displacement along X-axis
 alpha = np.zeros(2)       # rotation around X-axis 
 revolute = [True, True]
-sigma_d = np.array([0, 1]) # goal position
+sigma_d = np.array([0,1]) # goal position
 K = np.diag([1, 1])
 
 # Simulation params
@@ -71,7 +71,7 @@ def update_error_norm(pose,err,controller_solution):
     else:
         raise ValueError(f"Invalid controller type '{controller_solution}'. Choose from {list(error_dict.keys())}.")
 
-def snhow_n_save_plots():
+def show_n_save_plots():
     """saves the joint position""" 
     plot_control_error('plot_data/transpose_errors.npy', 'plot_data/pinverse_errors.npy', 'plot_data/DLS_errors.npy')
 
@@ -114,12 +114,15 @@ def simulate(t,controller_solution):
 controller_solution = "DLS"#["transpose","pinverse","DLS"] #transpose solution, pinverse solution and DLS
 error_files = {
     "transpose": "plot_data/transpose_errors.npy",
-    "pinverse": "plot_data/DLS.npy",
+    "pinverse": "plot_data/pinverse_errors.npy",
     "DLS": "plot_data/DLS_errors.npy",
     "joint_pose": "plot_data/joint_pose.npy"
 }
 
 # Run simulation with the current controller
+ax.set_title(f'{controller_solution} control')
+ax.set_xlabel('x[m]')
+ax.set_ylabel('y[m]')
 animation = anim.FuncAnimation(fig, simulate, np.arange(0, 10, dt),
                                 interval=10, blit=True, init_func=init,
                                 repeat=False, fargs=(controller_solution,))
@@ -134,4 +137,4 @@ if controller_solution in error_files:
 else:
     raise ValueError(f"Invalid controller type '{controller_solution}' for saving errors.")
 
-snhow_n_save_plots()
+show_n_save_plots()

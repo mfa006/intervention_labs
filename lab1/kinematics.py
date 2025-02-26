@@ -42,7 +42,7 @@ def simulate(t):
     
     # Update robot
     T = kinematics(d, q, a, alpha)
-    dq = np.ones(2) # Define how joint velocity changes with time!
+    dq = np.array([0.5,2.0])#np.ones(2) # Define how joint velocity changes with time!
     q = q + dt * dq
     joint_pos.append(q)
     # Update drawing

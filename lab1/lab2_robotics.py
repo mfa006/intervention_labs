@@ -19,20 +19,24 @@ def DH(d, theta, a, alpha):
     # 1. Build matrices representing elementary transformations (based on input parameters).
     # 2. Multiply matrices in the correct order (result in T).
     
-    M1 = block_diag(np.identity(2),np.identity(2))
-    M1[2,3] = d
+    # Translation along z-axis
+    M1 = block_diag(np.identity(2), np.identity(2))
+    M1[2, 3] = d
 
+    # Rotation about z-axis
     M2 = block_diag(np.array([[np.cos(theta), -np.sin(theta)],
-                   [np.sin(theta), np.cos(theta)]],),1,1)
-    
-    M3 = block_diag(np.identity(2),np.identity(2))
-    M3[0,-1] = a
+                              [np.sin(theta),  np.cos(theta)]]), 1, 1)
 
-    M4 = block_diag(1,np.array([[np.cos(alpha), -np.sin(alpha)],
-                   [np.sin(alpha), np.cos(alpha)]],),1)
-    
-    T = M1@M2@M3@M4    
+    # Translation along x-axis
+    M3 = block_diag(np.identity(2), np.identity(2))
+    M3[0, -1] = a
 
+    # Rotation about x-axis
+    M4 = block_diag(1, np.array([[np.cos(alpha), -np.sin(alpha)],
+                                 [np.sin(alpha),  np.cos(alpha)]]), 1)
+
+    # Combine all transformations
+    T = M1 @ M2 @ M3 @ M4
     return T
 
 def kinematics(d, theta, a, alpha):
@@ -57,7 +61,7 @@ def kinematics(d, theta, a, alpha):
     # 3. Append the computed transformation to T.
     for d_i,theta_i,a_i,alpha_i in zip(d,theta,a,alpha):
         T.append(T[-1]@DH(d_i,theta_i,a_i,alpha_i))
-
+        #Appending a new transformation after multiplying it with the last transformation. 
     return T
 
 # Inverse kinematics
@@ -79,16 +83,23 @@ def jacobian(T, revolute):
     #   b. Check joint type.
     #   c. Modify corresponding column of J.
     J = []
-
     O_n = T[-1][:3,-1]  # points of last transform
     for Ti,rev_flag in zip(T,revolute):
-        Ri = Ti[:3,:3]  #firsTi 3x3 matrix 
-        Oi = Ti[:3,-1]
-        zi = Ri[:3,-1]
-        J.append(np.vstack([(np.cross(rev_flag*zi,(O_n-Oi))+(1-rev_flag)*zi).reshape(3,1),(rev_flag*zi).reshape(3,1)]))
-    J = np.hstack(J)
+        Ri = Ti[:3,:3]  #Rotation matrix 3x3 matrix 
+        Oi = Ti[:3,-1] #Origin vector
+        zi = Ri[:3,-1]  #z-vector
+        J.append(np.vstack([(np.cross(rev_flag*zi,(O_n-Oi)) +
+                                           (1-rev_flag)*zi).reshape(3,1),(rev_flag*zi).reshape(3,1)]))
+        # For revolute joints (rev_flag=1): 
+        #   J_i =[ [ z_i x (O_n - O_i) ],
+        #         [       z_i         ]]
+        # For prismatic joints (rev_flag=0):
+        #   J_i =[ [ z_i ],
+        #         [ 0 ]]
+    J = np.hstack(J) #stacking jacobians
 
     return J
+
 
 # Damped Least-Squares
 def DLS(A, damping):
@@ -102,7 +113,8 @@ def DLS(A, damping):
         Returns:
         (Numpy array): inversion of the input matrix
     ''' 
-    DLS = A.T@np.linalg.inv(A@A.T+(damping**2)*np.identity(2))
+    # A_dls = A^T * (A*A^T + λ^2*I)^(-1)
+    DLS = A.T@np.linalg.inv(A@A.T+(damping**2)*np.identity(2)) 
 
     return DLS # Implement the formula to compute the DLS of matrix A.
 
