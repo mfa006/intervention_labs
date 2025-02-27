@@ -3,12 +3,19 @@ from lab2_robotics import * # Includes numpy import
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 
+# d = np.zeros(2)           # displacement along Z-axis
+# q = np.array([0.2, 0.5])  # rotation around Z-axis (theta)
+# a = np.array([0.75, 0.5]) # displacement along X-axis
+# alpha = np.zeros(2)       # rotation around X-axis 
+
+
 # Robot definition (3 revolute joint planar manipulator)
-d =                             # displacement along Z-axis
-q =                             # rotation around Z-axis (theta)
-alpha =                         # displacement along X-axis
-a =                             # rotation around X-axis 
-revolute =                      # flags specifying the type of joints
+d = np.zeros(3)                         # displacement along Z-axis
+q = np.array([0.2, 0.5,0.6])                # rotation around Z-axis (theta)
+alpha = np.zeros(3)                     # displacement along X-axis
+a = np.array([0.75, 0.5,0.25])               # rotation around X-axis 
+revolute = np.array([True,True,True])                             # flags specifying the type of joints
+K = np.diag([1, 1])
 
 # Setting desired position of end-effector to the current one
 T = kinematics(d, q.flatten(), a, alpha) # flatten() needed if q defined as column vector !
@@ -50,16 +57,16 @@ def simulate(t):
     J = jacobian(T, revolute)
     
     # Update control
-    sigma =                  # Current position of the end-effector
-    err =                    # Error in position
-    Jbar =                   # Task Jacobian
-    P =                      # Null space projector
-    y =                      # Arbitrary joint velocity
-    dq =                     # Control signal
-    q = q + dt * dq # Simulation update
+    PP = robotPoints2D(T)
+    sigma = T[-1][0:2,3].reshape(2,1)# Current position of the end-effector
+    err = sigma_d - sigma    # Error in position
+    Jbar = J[0:2, :]         # Task Jacobian
+    P = np.eye(3) - np.linalg.pinv(Jbar)@Jbar   # Null space projector
+    y = np.array([np.sin(t),np.cos(t),np.sin(t)]).reshape(3,1) # Arbitrary joint velocity
+    dq = np.linalg.pinv(Jbar)@K@err + P@y                    # Control signal
+    q = q + dt * dq.reshape(3) # Simulation update
 
     # Update drawing
-    PP = robotPoints2D(T)
     line.set_data(PP[0,:], PP[1,:])
     PPx.append(PP[0,-1])
     PPy.append(PP[1,-1])
