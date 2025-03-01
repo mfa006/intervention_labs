@@ -73,7 +73,7 @@ def update_error_norm(pose,err,controller_solution):
 
 def show_n_save_plots():
     """saves the joint position""" 
-    plot_control_error('plot_data/transpose_errors.npy', 'plot_data/pinverse_errors.npy', 'plot_data/DLS_errors.npy')
+    plot_control_error('transpose_errors.npy', 'pinverse_errors.npy', 'DLS_errors.npy')
 
 
 # Simulation loop
