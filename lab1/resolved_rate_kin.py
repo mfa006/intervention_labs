@@ -55,11 +55,24 @@ def control(type: str, J: np.ndarray, lambda_: float = 0.1) -> np.ndarray:
     
 def plot_control_error(transpose_file, pinverse_file, DLS_file, simulation_time=10, fps=60):
     # Loading  saved control error norms
-    transpose_errors = np.load(transpose_file)
-    pinverse_errors = np.load(pinverse_file)
-    DLS_errors = np.load(DLS_file)
+    try:
+        transpose_errors = np.load(transpose_file)
+    except FileNotFoundError:
+        print(f"File {transpose_file} not found\n. Please run controller_solution 'transpose' to generate file.")
+        exit(0)
+    try:
+        pinverse_errors = np.load(pinverse_file)
+    except FileNotFoundError:
+        print(f"File {pinverse_file} not found\n. Please run controller_solution 'pinverse' to generate file.")
+        exit(0)
+    try:
+        DLS_errors = np.load(DLS_file)
+    except FileNotFoundError:
+        print(f"File {DLS_file} not found\n. Please run controller_solution 'DLS' to generate file.")
+        exit(0)
+    
 
-    print(transpose_errors)
+    # print(transpose_errors)
     # Expected number of time steps
     expected_length = int(simulation_time * fps)
 
@@ -145,7 +158,7 @@ def simulate(t,controller_solution):
 
 
 #this is where we select the control solution
-controller_solution = "DLS"#["transpose","pinverse","DLS"] #transpose solution, pinverse solution and DLS
+controller_solution = "pinverse"#["transpose","pinverse","DLS"] #transpose solution, pinverse solution and DLS
 error_files = {
     "transpose": "transpose_errors.npy",
     "pinverse": "pinverse_errors.npy",
