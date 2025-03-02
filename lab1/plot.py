@@ -35,3 +35,5 @@ def plot_control_error(transpose_file, pinverse_file, DLS_file, simulation_time=
     plt.savefig("plot.png")
     plt.grid(True)
     plt.show()
+
+plot_control_error("transpose_errors.npy", "pinverse_errors.npy", "DLS_errors.npy", simulation_time=10, fps=60)

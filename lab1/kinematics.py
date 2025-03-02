@@ -2,7 +2,7 @@
 from lab2_robotics import * # Import our library (includes Numpy)
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
-from plot import *
+
 # Robot definition (planar 2 link manipulator)
 d = np.zeros(2)           # displacement along Z-axis
 q = np.array([0.2, 0.5])  # rotation around Z-axis (theta)
