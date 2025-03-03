@@ -114,7 +114,9 @@ def DLS(A, damping):
         (Numpy array): inversion of the input matrix
     ''' 
     # A_dls = A^T * (A*A^T + λ^2*I)^(-1)
-    DLS = A.T@np.linalg.inv(A@A.T+(damping**2)*np.identity(2)) 
+    # DLS = A.T@np.linalg.inv(A@A.T+(damping**2)*np.identity(2)) 
+    A_mult = A@A.T
+    DLS = A.T @ np.linalg.inv(A_mult + (damping**2 * np.eye((A @ A.T).shape[0])))
 
     return DLS # Implement the formula to compute the DLS of matrix A.
 

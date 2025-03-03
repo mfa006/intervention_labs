@@ -39,6 +39,9 @@ path, = ax.plot([], [], 'c-', lw=1) # End-effector path
 point, = ax.plot([], [], 'rx') # Target
 PPx = []
 PPy = []
+# Memory
+joint_pos1, joint_pos2, joint_pos3 = [], [], []
+time_vector = []
 
 # Simulation initialization
 def init():
@@ -73,9 +76,27 @@ def simulate(t):
     path.set_data(PPx, PPy)
     point.set_data(sigma_d[0], sigma_d[1])
 
+    #for plotting the angles
+    joint_pos1.append(q[0])
+    joint_pos2.append(q[1])
+    joint_pos3.append(q[2])
+    time_vector.append(t)
+
     return line, path, point
 
 # Run simulation
 animation = anim.FuncAnimation(fig, simulate, np.arange(0, 60, dt), 
                                 interval=10, blit=True, init_func=init, repeat=False)
+plt.show()
+
+# Plot the joint positions over time
+plt.figure(figsize=(8, 6))
+plt.plot(time_vector, joint_pos1, label='Joint 1')
+plt.plot(time_vector, joint_pos2, label='Joint 2')
+plt.plot(time_vector, joint_pos3, label='Joint 3')
+plt.xlabel('Time [s]')
+plt.ylabel('Joint Angle [rad]')
+plt.title('Joint Positions over Time')
+plt.legend()
+plt.grid(True)
 plt.show()
