@@ -13,14 +13,26 @@ revolute = np.array([True,True,True])      # flags specifying the type of joints
 K1 = np.diag([1, 1])                   # Gain for the first task
 K2 = np.diag([1])                      # Gain for the second task
 
-goals = [
-    # np.array([-0.6, 0.0]).reshape(2, 1),
-    np.array([0.4, -1.2]).reshape(2, 1),
-    np.array([-1.2, 0.2]).reshape(2, 1),
-    np.array([-0.1, -0.8]).reshape(2, 1),
-    np.array([-0.6, -0.6]).reshape(2, 1),
-    np.array([0.2, -0.6]).reshape(2, 1),
-    np.array([-0.6,1.2]).reshape(2, 1),
+task_flag = 2 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
+#goals for EE priority
+# goals = [
+#     np.array([0.4, -1.2]).reshape(2, 1),
+#     np.array([-1.2, 0.2]).reshape(2, 1),
+#     np.array([-0.1, -0.8]).reshape(2, 1),
+#     np.array([-0.6, -0.6]).reshape(2, 1),
+#     np.array([0.2, -0.6]).reshape(2, 1),
+#     np.array([-0.6,1.2]).reshape(2, 1),
+#     np.array([0.5,0.4]).reshape(2, 1),
+#     np.array([-0.2,0.2]).reshape(2, 1)
+# ]
+#goals for Joint priority
+goals =[
+    np.array([0.4, -0.3]).reshape(2, 1),
+    np.array([-0.2, 0.2]).reshape(2, 1),
+    np.array([-0.1, -0.3]).reshape(2, 1),
+    np.array([-0.2, -0.3]).reshape(2, 1),
+    np.array([0.2, -0.3]).reshape(2, 1),
+    np.array([-0.2,0.3]).reshape(2, 1),
     np.array([0.5,0.4]).reshape(2, 1),
     np.array([-0.2,0.2]).reshape(2, 1)
 ]
@@ -51,7 +63,6 @@ PPy = []
 joint_pos1, ee_pose = [], []
 time_vector = []
 
-task_flag = 1 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
 # Simulation initialization
 def init():
     line.set_data([], [])
@@ -105,6 +116,7 @@ def simulate(t):
         J1 = np.array([1, 0, 0]).reshape(1, 3)                   # Jacobian of the second task
         P1 = np.eye(3) - np.linalg.pinv(J1) @ J1                   # Null space projector
 
+            
         # TASK 2: End-effector position control
         sigma1 = T[-1][0:2, -1].reshape(2, 1)                # Current position of the end-effector
         err1 = sigma1_d - sigma1                # Error in Cartesian position
@@ -117,6 +129,10 @@ def simulate(t):
         J_DLS2 = DLS(J2bar, 0.1) # DLS for the second task
         dq2 = (J_DLS1 @ x2_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq2 + J_DLS2 @ (x1_dot - J1 @ dq2)                 # Velocity for both tasks
+        if np.linalg.norm(err1) < 0.05:
+        # Move to the next goal (cycling through the list)
+            current_goal_idx = (current_goal_idx + 1) % len(goals)
+            sigma1_d = goals[current_goal_idx]
 
     q = q + dq12 * dt # Simulation update
 
