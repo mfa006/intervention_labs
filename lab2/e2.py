@@ -13,8 +13,21 @@ revolute = np.array([True,True,True])      # flags specifying the type of joints
 K1 = np.diag([1, 1])                   # Gain for the first task
 K2 = np.diag([1])                      # Gain for the second task
 
-# Desired values of task variables
-sigma1_d = np.array([-1.0, -1.0]).reshape(2,1) # Position of the end-effector
+goals = [
+    # np.array([-0.6, 0.0]).reshape(2, 1),
+    np.array([0.4, -1.2]).reshape(2, 1),
+    np.array([-1.2, 0.2]).reshape(2, 1),
+    np.array([-0.1, -0.8]).reshape(2, 1),
+    np.array([-0.6, -0.6]).reshape(2, 1),
+    np.array([0.2, -0.6]).reshape(2, 1),
+    np.array([-0.6,1.2]).reshape(2, 1),
+    np.array([0.5,0.4]).reshape(2, 1),
+    np.array([-0.2,0.2]).reshape(2, 1)
+]
+# Desired values of task variables 
+current_goal_idx = 0
+sigma1_d = goals[current_goal_idx]
+# sigma1_d = np.array([-0.6,0.0]).reshape(2,1) # Position of the end-effector
 sigma2_d = np.array([[0.0]]) # Position of joint 1
 
 # Simulation params
@@ -35,6 +48,8 @@ path, = ax.plot([], [], 'c-', lw=1) # End-effector path
 point, = ax.plot([], [], 'rx') # Target
 PPx = []
 PPy = []
+joint_pos1, ee_pose = [], []
+time_vector = []
 
 task_flag = 1 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
 # Simulation initialization
@@ -47,12 +62,11 @@ def init():
 # Simulation loop
 def simulate(t):
     global q, a, d, alpha, revolute, sigma1_d, sigma2_d
-    global PPx, PPy
+    global PPx, PPy, current_goal_idx
     
     # Update robot
     T = kinematics(d, q.flatten(), a, alpha)
     J = jacobian(T, revolute)
-
     # Update control
     # Choose the case based on the flag
     if task_flag == 1:
@@ -76,6 +90,12 @@ def simulate(t):
         J_DLS2 = DLS(J2bar, 0.1) # DLS for the second task
         dq1 = (J_DLS1 @ x1_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq1 + J_DLS2 @ (x2_dot - J2 @ dq1)                 # Velocity for both tasks
+        
+        if np.linalg.norm(err1) < 0.05:
+        # Move to the next goal (cycling through the list)
+            current_goal_idx = (current_goal_idx + 1) % len(goals)
+            sigma1_d = goals[current_goal_idx]
+
     elif task_flag == 2:
         # CASE 2: Joint position control as the top hierarchy task
         # TASK 1: Joint position control
@@ -106,11 +126,27 @@ def simulate(t):
     PPx.append(PP[0,-1])
     PPy.append(PP[1,-1])
     path.set_data(PPx, PPy)
+    
     point.set_data(sigma1_d[0], sigma1_d[1])
-
+    
+    #for plotting
+    ee_pose.append(q[2])
+    joint_pos1.append(q[0])
+    time_vector.append(t)
+    
     return line, path, point
 
 # Run simulation
-animation = anim.FuncAnimation(fig, simulate, np.arange(0, 10, dt), 
+animation = anim.FuncAnimation(fig, simulate, np.arange(0, 70, dt), 
                                 interval=10, blit=True, init_func=init, repeat=False)
+plt.show()
+
+plt.figure(figsize=(8, 6))
+plt.plot(time_vector, joint_pos1, label='e_2 (Joint 1 Position)')
+plt.plot(time_vector, ee_pose, label='e_1 (End-Effector Position)')
+plt.xlabel('Time [s]')
+plt.ylabel('Error [1]')
+plt.title('Joint Positions over Time')
+plt.legend()
+plt.grid(True)
 plt.show()

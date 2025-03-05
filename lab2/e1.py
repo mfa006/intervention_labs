@@ -86,7 +86,7 @@ def simulate(t):
 
 # Run simulation
 animation = anim.FuncAnimation(fig, simulate, np.arange(0, 60, dt), 
-                                interval=10, blit=True, init_func=init, repeat=False)
+                                interval=10, blit=True, init_func=init, repeat=True)
 plt.show()
 
 # Plot the joint positions over time
