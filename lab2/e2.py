@@ -13,7 +13,7 @@ revolute = np.array([True,True,True])      # flags specifying the type of joints
 K1 = np.diag([1, 1])                   # Gain for the first task
 K2 = np.diag([1])                      # Gain for the second task
 
-task_flag = 1 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
+task_flag = 2 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
 
 sigma1_d = np.array([-0.6,0.0]).reshape(2,1) # Position of the end-effector
 sigma2_d = np.array([[0.0]]) # Position of joint 1
@@ -26,7 +26,7 @@ tt = np.arange(0, Tt, dt) # Simulation time vector
 # Drawing preparation
 fig = plt.figure()
 ax = fig.add_subplot(111, autoscale_on=False, xlim=(-2, 2), ylim=(-2,2))
-ax.set_title('Simulation')
+ax.set_title('Simulation of {} Priority Task'.format("EE" if task_flag == 1 else "Joint"))
 ax.set_aspect('equal')
 ax.set_xlabel('x[m]')
 ax.set_ylabel('y[m]')
