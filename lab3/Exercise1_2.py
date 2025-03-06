@@ -9,7 +9,7 @@ alpha = np.zeros(3)             # rotation around X-axis
 a = np.array([0.75, 0.5, 0.5])  # displacement along X-axis
 revolute = np.array([True,True,True])             # flags specifying the type of joints
 robot = Manipulator(d, theta, a, alpha, revolute) # Manipulator object
-sigma_d = T[-1][0:2,3].reshape(2,1)
+# sigma_d = T[-1][0:2,3].reshape(2,1)
 # Task hierarchy definition
 tasks = [ 
             Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2,1))
@@ -47,20 +47,21 @@ def simulate(t):
     global PPx, PPy
 
     ### Recursive Task-Priority algorithm
-    T = kinematics(d, theta.flatten(), a, alpha)
-    J = jacobian(T, revolute)
-    # Initialize null-space projector
-    sigma = T[-1][0:2,3].reshape(2,1)# Current position of the end-effector
-    err = sigma_d - sigma    # Error in position
-    Jbar = J[0:2, :]         # Task Jacobian
-    P = np.eye(3) - np.linalg.pinv(Jbar)@Jbar   # Null space projector
+    P = np.eye(3)  # Null space projector
     # Initialize output vector (joint velocity)
+    J = np.zeros((6,3))
     # Loop over tasks
+    for task in tasks:
         # Update task state
+        task.update(robot)
         # Compute augmented Jacobian
+        J_bar = task.getJacobian @ P
         # Compute task velocity
+
         # Accumulate velocity
+
         # Update null-space projector
+        P1 = np.eye(3) - np.linalg.pinv(J1) @ J1 
     ###
 
     # Update robot

@@ -1,4 +1,5 @@
-from lab2_robotics import * # Includes numpy import
+from lab2_robotics import * 
+import numpy as np # Includes numpy import
 
 def jacobianLink(T, revolute, link): # Needed in Exercise 2
     '''
@@ -148,13 +149,13 @@ class Task:
 class Position2D(Task):
     def __init__(self, name, desired):
         super().__init__(name, desired)
-        #self.J = # Initialize with proper dimensions
-        #self.err = # Initialize with proper dimensions
+        self.J = np.zeros((2,3))# Initialize with proper dimensions
+        self.err = np.array([0,0])# Initialize with proper dimensions
         
     def update(self, robot):
-        # self.J = # Update task Jacobian
-        # self.err = # Update task error
-        pass # to remove
+        self.J = self.getJacobian()[:2,:]         # Update task Jacobian
+        self.err = self.getDesired() - robot.getEETransform()[:2,-1]# Update task error
+         
 '''
     Subclass of Task, representing the 2D orientation task.
 '''
