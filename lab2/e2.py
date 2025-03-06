@@ -67,7 +67,9 @@ time_vector = []
 def init():
     line.set_data([], [])
     path.set_data([], [])
-    point.set_data([], [])
+    point.set_data(sigma1_d[0], sigma1_d[1])
+    current_goal_idx=current_goal_idx+1
+    # print(current_goal_idx,sigma1_d)
     return line, path, point
 
 # Simulation loop
