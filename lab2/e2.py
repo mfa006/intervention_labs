@@ -7,7 +7,7 @@ import matplotlib.animation as anim
 d = np.zeros(3)                            # displacement along Z-axis
 q = np.array([0, np.pi/4, np.pi/4]).reshape(3, 1)               # rotation around Z-axis (theta) q1 = 0 [rad], q2 = pi/4 [rad], q3 = pi/6 [rad]
 alpha =  np.zeros(3)                       # displacement along X-axis
-a =   np.array([0.75, 0.5, 0.5])           # rotation around X-axis 
+a =  np.array([0.75, 0.5, 0.25])           # rotation around X-axis 
 revolute = np.array([True,True,True])      # flags specifying the type of joints
 
 K1 = np.diag([1, 1])                   # Gain for the first task
@@ -66,12 +66,12 @@ time_vector = []
 # Simulation initialization
 def init(): 
     global current_goal_idx,sigma1_d,goals
-    sigma1_d = goals[current_goal_idx]
+    sigma1_d = goals[current_goal_idx%len(goals)] # select goal from predefined goals
     line.set_data([], [])
     path.set_data([], [])
-    point.set_data(sigma1_d[0], sigma1_d[1])
-    current_goal_idx=current_goal_idx+1
-    print(current_goal_idx,sigma1_d)
+    point.set_data(sigma1_d[0], sigma1_d[1]) # set goal
+    current_goal_idx=current_goal_idx+1 #increment index
+    # print(current_goal_idx,sigma1_d)
     return line, path, point
 
 # Simulation loop
@@ -139,7 +139,7 @@ def simulate(t):
     path.set_data(PPx, PPy)
     
     # point.set_data(sigma1_d[0], sigma1_d[1]) #goal
-        #for error normalization
+    #for error normalization
     err_joint_pos1_norm = np.linalg.norm(err2)  # Joint 1 position error normalized
     err_ee_pose_norm = np.linalg.norm(err1)  # End-effector position error normalized
 
