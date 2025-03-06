@@ -105,12 +105,7 @@ def simulate(t):
         J_DLS2 = DLS(J2bar, 0.1) # DLS for the second task
         dq1 = (J_DLS1 @ x1_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq1 + J_DLS2 @ (x2_dot - J2 @ dq1)                 # Velocity for both tasks
-        
-        # if np.linalg.norm(err1) < 0.05:
-        # # Move to the next goal (cycling through the list)
-        #     current_goal_idx = (current_goal_idx + 1) % len(goals)
-        #     sigma1_d = goals[current_goal_idx]
-
+  
     elif task_flag == 2:
         # CASE 2: Joint position control as the top hierarchy task
         # TASK 1: Joint position control
@@ -133,11 +128,7 @@ def simulate(t):
         J_DLS2 = DLS(J2bar, 0.1) # DLS for the second task
         dq2 = (J_DLS1 @ x2_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq2 + J_DLS2 @ (x1_dot - J1 @ dq2)                 # Velocity for both tasks
-        # if np.linalg.norm(err1) < 0.05:
-        # # Move to the next goal (cycling through the list)
-        #     current_goal_idx = (current_goal_idx + 1) % len(goals)
-        #     sigma1_d = goals[current_goal_idx]
-
+ 
     q = q + dq12 * dt # Simulation update
 
     # Update drawing
@@ -148,10 +139,13 @@ def simulate(t):
     path.set_data(PPx, PPy)
     
     # point.set_data(sigma1_d[0], sigma1_d[1]) #goal
-    
+        #for error normalization
+    err_joint_pos1_norm = np.linalg.norm(err2)  # Joint 1 position error normalized
+    err_ee_pose_norm = np.linalg.norm(err1)  # End-effector position error normalized
+
     #for plotting
-    ee_pose.append(q[2])
-    joint_pos1.append(q[0])
+    ee_pose.append(err_ee_pose_norm)
+    joint_pos1.append(err_joint_pos1_norm)
     # time_vector.append(t)
     
     return line, path, point
@@ -167,7 +161,7 @@ plt.plot(time_vector, joint_pos1, label='e_2 (Joint 1 Position)')
 plt.plot(time_vector, ee_pose, label='e_1 (End-Effector Position)')
 plt.xlabel('Time [s]')
 plt.ylabel('Error [1]')
-plt.title('Joint Positions over Time')
+plt.title('Task Priority:{};Joint Positions over Time'.format('EE'))
 plt.legend()
 plt.grid(True)
 plt.show()
