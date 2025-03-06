@@ -5,7 +5,7 @@ import matplotlib.animation as anim
 
 # Robot definition (3 revolute joint planar manipulator)
 d = np.zeros(3)                            # displacement along Z-axis
-q = np.array([0, np.pi/4, np.pi/4]).reshape(3, 1)               # rotation around Z-axis (theta) q1 = 0 [rad], q2 = pi/4 [rad], q3 = pi/6 [rad]
+q = np.array([0, 0.785, 0.785]).reshape(3, 1)               # rotation around Z-axis (theta) q1 = 0 [rad], q2 = 0.785 [rad], q3 = 0.785 [rad]
 alpha =  np.zeros(3)                       # displacement along X-axis
 a =   np.array([0.75, 0.5, 0.5])           # rotation around X-axis 
 revolute = np.array([True,True,True])      # flags specifying the type of joints
@@ -91,10 +91,7 @@ def simulate(t):
         dq1 = (J_DLS1 @ x1_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq1 + J_DLS2 @ (x2_dot - J2 @ dq1)                 # Velocity for both tasks
         
-        # if np.linalg.norm(err1) < 0.05:
-        # # Move to the next goal (cycling through the list)
-        #     current_goal_idx = (current_goal_idx + 1) % len(goals)
-        #     sigma1_d = goals[current_goal_idx]
+        
 
     elif task_flag == 2:
         # CASE 2: Joint position control as the top hierarchy task
@@ -118,10 +115,7 @@ def simulate(t):
         J_DLS2 = DLS(J2bar, 0.1) # DLS for the second task
         dq2 = (J_DLS1 @ x2_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq2 + J_DLS2 @ (x1_dot - J1 @ dq2)                 # Velocity for both tasks
-        # if np.linalg.norm(err1) < 0.05:
-        # # Move to the next goal (cycling through the list)
-        #     current_goal_idx = (current_goal_idx + 1) % len(goals)
-        #     sigma1_d = goals[current_goal_idx]
+        
 
     q = q + dq12 * dt # Simulation update
 

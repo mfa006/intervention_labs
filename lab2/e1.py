@@ -11,7 +11,7 @@ import matplotlib.animation as anim
 
 # Robot definition (3 revolute joint planar manipulator)
 d = np.zeros(3)                         # displacement along Z-axis
-q = np.array([0, np.pi/4, np.pi/4])               # rotation around Z-axis (theta)
+q = np.array([0, 0.785, 0.785])               # rotation around Z-axis (theta)
 alpha = np.zeros(3)                     # displacement along X-axis
 a = np.array([0.75, 0.5,0.25])               # displacement around X-axis 
 revolute = np.array([True,True,True])                             # flags specifying the type of joints
