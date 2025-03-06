@@ -13,7 +13,7 @@ revolute = np.array([True,True,True])      # flags specifying the type of joints
 K1 = np.diag([1, 1])                   # Gain for the first task
 K2 = np.diag([1])                      # Gain for the second task
 
-task_flag = 1 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
+task_flag = 2 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
 #goals for EE priority
 goals = [
     np.array([0.4, -1.2]).reshape(2, 1),
@@ -161,7 +161,8 @@ plt.plot(time_vector, joint_pos1, label='e_2 (Joint 1 Position)')
 plt.plot(time_vector, ee_pose, label='e_1 (End-Effector Position)')
 plt.xlabel('Time [s]')
 plt.ylabel('Error [1]')
-plt.title('Task Priority:{};Joint Positions over Time'.format('EE'))
+plt.title('Priority Task: {}\nEvolution of the TP control errors.'.format("EE" if task_flag == 1 else "Joint"))
 plt.legend()
 plt.grid(True)
+plt.savefig(f"e2_{task_flag}.png")
 plt.show()
