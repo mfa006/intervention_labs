@@ -14,31 +14,7 @@ K1 = np.diag([1, 1])                   # Gain for the first task
 K2 = np.diag([1])                      # Gain for the second task
 
 task_flag = 2 # Flag for choosing the case (1 for case 1: end-effector position control, and 2 for case 2: joint position control)
-#goals for EE priority
-# goals = [
-#     np.array([0.4, -1.2]).reshape(2, 1),
-#     np.array([-1.2, 0.2]).reshape(2, 1),
-#     np.array([-0.1, -0.8]).reshape(2, 1),
-#     np.array([-0.6, -0.6]).reshape(2, 1),
-#     np.array([0.2, -0.6]).reshape(2, 1),
-#     np.array([-0.6,1.2]).reshape(2, 1),
-#     np.array([0.5,0.4]).reshape(2, 1),
-#     np.array([-0.2,0.2]).reshape(2, 1)
-# ]
-#goals for Joint priority
-# goals =[
-#     np.array([0.4, -0.3]).reshape(2, 1),
-#     np.array([-0.2, 0.2]).reshape(2, 1),
-#     np.array([-0.1, -0.3]).reshape(2, 1),
-#     np.array([-0.2, -0.3]).reshape(2, 1),
-#     np.array([0.2, -0.3]).reshape(2, 1),
-#     np.array([-0.2,0.3]).reshape(2, 1),
-#     np.array([0.5,0.4]).reshape(2, 1),
-#     np.array([-0.2,0.2]).reshape(2, 1)
-# ]
-# Desired values of task variables 
-# current_goal_idx = 0
-# sigma1_d = goals[current_goal_idx]
+
 sigma1_d = np.array([-0.6,0.0]).reshape(2,1) # Position of the end-effector
 sigma2_d = np.array([[0.0]]) # Position of joint 1
 
@@ -161,10 +137,10 @@ def simulate(t):
     #for error normalization
     err_joint_pos1_norm = np.linalg.norm(err2)  # Joint 1 position error normalized
     err_ee_pose_norm = np.linalg.norm(err1)  # End-effector position error normalized
-    # ee_pose.append(q[2])
+
     err_ee_pose.append(err_ee_pose_norm)
     err_joint_pos1.append(err_joint_pos1_norm)
-    # joint_pos1.append(q[0])
+
     time_vector.append(t + last_log)
     
     return line, path, point
