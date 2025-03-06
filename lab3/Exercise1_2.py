@@ -47,7 +47,7 @@ def simulate(t):
     global PPx, PPy
 
     ### Recursive Task-Priority algorithm
-    T = kinematics(d, q.flatten(), a, alpha)
+    T = kinematics(d, theta.flatten(), a, alpha)
     J = jacobian(T, revolute)
     # Initialize null-space projector
     sigma = T[-1][0:2,3].reshape(2,1)# Current position of the end-effector
