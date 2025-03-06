@@ -26,20 +26,20 @@ task_flag = 2 # Flag for choosing the case (1 for case 1: end-effector position 
 #     np.array([-0.2,0.2]).reshape(2, 1)
 # ]
 #goals for Joint priority
-goals =[
-    np.array([0.4, -0.3]).reshape(2, 1),
-    np.array([-0.2, 0.2]).reshape(2, 1),
-    np.array([-0.1, -0.3]).reshape(2, 1),
-    np.array([-0.2, -0.3]).reshape(2, 1),
-    np.array([0.2, -0.3]).reshape(2, 1),
-    np.array([-0.2,0.3]).reshape(2, 1),
-    np.array([0.5,0.4]).reshape(2, 1),
-    np.array([-0.2,0.2]).reshape(2, 1)
-]
+# goals =[
+#     np.array([0.4, -0.3]).reshape(2, 1),
+#     np.array([-0.2, 0.2]).reshape(2, 1),
+#     np.array([-0.1, -0.3]).reshape(2, 1),
+#     np.array([-0.2, -0.3]).reshape(2, 1),
+#     np.array([0.2, -0.3]).reshape(2, 1),
+#     np.array([-0.2,0.3]).reshape(2, 1),
+#     np.array([0.5,0.4]).reshape(2, 1),
+#     np.array([-0.2,0.2]).reshape(2, 1)
+# ]
 # Desired values of task variables 
-current_goal_idx = 0
-sigma1_d = goals[current_goal_idx]
-# sigma1_d = np.array([-0.6,0.0]).reshape(2,1) # Position of the end-effector
+# current_goal_idx = 0
+# sigma1_d = goals[current_goal_idx]
+sigma1_d = np.array([-0.6,0.0]).reshape(2,1) # Position of the end-effector
 sigma2_d = np.array([[0.0]]) # Position of joint 1
 
 # Simulation params
@@ -60,20 +60,33 @@ path, = ax.plot([], [], 'c-', lw=1) # End-effector path
 point, = ax.plot([], [], 'rx') # Target
 PPx = []
 PPy = []
-joint_pos1, ee_pose = [], []
+err_joint_pos1, err_ee_pose = [], []
 time_vector = []
+last_log = 0
 
 # Simulation initialization
 def init():
     line.set_data([], [])
     path.set_data([], [])
     point.set_data([], [])
+
+    #for the plotting 
+    global last_log
+    global sigma1_d
+    
+    sigma1_d = np.random.uniform(-1, 1, 2).reshape(2, 1)
+
+    if time_vector:
+        last_log = time_vector[-1]
+    else:
+        last_log = 0
+
     return line, path, point
 
 # Simulation loop
 def simulate(t):
     global q, a, d, alpha, revolute, sigma1_d, sigma2_d
-    global PPx, PPy, current_goal_idx
+    global PPx, PPy, current_goal_idx, last_log
     
     # Update robot
     T = kinematics(d, q.flatten(), a, alpha)
@@ -102,10 +115,10 @@ def simulate(t):
         dq1 = (J_DLS1 @ x1_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq1 + J_DLS2 @ (x2_dot - J2 @ dq1)                 # Velocity for both tasks
         
-        if np.linalg.norm(err1) < 0.05:
-        # Move to the next goal (cycling through the list)
-            current_goal_idx = (current_goal_idx + 1) % len(goals)
-            sigma1_d = goals[current_goal_idx]
+        # if np.linalg.norm(err1) < 0.05:
+        # # Move to the next goal (cycling through the list)
+        #     current_goal_idx = (current_goal_idx + 1) % len(goals)
+        #     sigma1_d = goals[current_goal_idx]
 
     elif task_flag == 2:
         # CASE 2: Joint position control as the top hierarchy task
@@ -129,10 +142,10 @@ def simulate(t):
         J_DLS2 = DLS(J2bar, 0.1) # DLS for the second task
         dq2 = (J_DLS1 @ x2_dot).reshape(3, 1)                  # Velocity for the first task
         dq12 = dq2 + J_DLS2 @ (x1_dot - J1 @ dq2)                 # Velocity for both tasks
-        if np.linalg.norm(err1) < 0.05:
-        # Move to the next goal (cycling through the list)
-            current_goal_idx = (current_goal_idx + 1) % len(goals)
-            sigma1_d = goals[current_goal_idx]
+        # if np.linalg.norm(err1) < 0.05:
+        # # Move to the next goal (cycling through the list)
+        #     current_goal_idx = (current_goal_idx + 1) % len(goals)
+        #     sigma1_d = goals[current_goal_idx]
 
     q = q + dq12 * dt # Simulation update
 
@@ -145,21 +158,25 @@ def simulate(t):
     
     point.set_data(sigma1_d[0], sigma1_d[1])
     
-    #for plotting
-    ee_pose.append(q[2])
-    joint_pos1.append(q[0])
-    time_vector.append(t)
+    #for error normalization
+    err_joint_pos1_norm = np.linalg.norm(err2)  # Joint 1 position error normalized
+    err_ee_pose_norm = np.linalg.norm(err1)  # End-effector position error normalized
+    # ee_pose.append(q[2])
+    err_ee_pose.append(err_ee_pose_norm)
+    err_joint_pos1.append(err_joint_pos1_norm)
+    # joint_pos1.append(q[0])
+    time_vector.append(t + last_log)
     
     return line, path, point
 
 # Run simulation
-animation = anim.FuncAnimation(fig, simulate, np.arange(0, 70, dt), 
-                                interval=10, blit=True, init_func=init, repeat=False)
+animation = anim.FuncAnimation(fig, simulate, np.arange(0, 10, dt), 
+                                interval=10, blit=True, init_func=init, repeat=True)
 plt.show()
 
 plt.figure(figsize=(8, 6))
-plt.plot(time_vector, joint_pos1, label='e_2 (Joint 1 Position)')
-plt.plot(time_vector, ee_pose, label='e_1 (End-Effector Position)')
+plt.plot(time_vector, err_joint_pos1, label='e_2 (Joint 1 Position)')
+plt.plot(time_vector, err_ee_pose, label='e_1 (End-Effector Position)')
 plt.xlabel('Time [s]')
 plt.ylabel('Error [1]')
 plt.title('Joint Positions over Time')
