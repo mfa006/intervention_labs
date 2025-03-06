@@ -2,19 +2,13 @@
 from lab2_robotics import * # Includes numpy import
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
-
-# d = np.zeros(2)           # displacement along Z-axis
-# q = np.array([0.2, 0.5])  # rotation around Z-axis (theta)
-# a = np.array([0.75, 0.5]) # displacement along X-axis
-# alpha = np.zeros(2)       # rotation around X-axis 
-
-
+ 
 # Robot definition (3 revolute joint planar manipulator)
 d = np.zeros(3)                         # displacement along Z-axis
-q = np.array([0, np.pi/4, np.pi/4])               # rotation around Z-axis (theta)
+q = np.array([0, 0.785, 0.785])         # rotation around Z-axis (theta)
 alpha = np.zeros(3)                     # displacement along X-axis
-a = np.array([0.75, 0.5,0.25])               # rotation around X-axis 
-revolute = np.array([True,True,True])                             # flags specifying the type of joints
+a = np.array([0.75, 0.5,0.25])          # displacement around X-axis 
+revolute = np.array([True,True,True])   # flags specifying the type of joints
 K = np.diag([1, 1])
 
 # Setting desired position of end-effector to the current one
@@ -57,17 +51,23 @@ def simulate(t):
     
     # Update robot
     T = kinematics(d, q.flatten(), a, alpha)
-    J = jacobian(T, revolute)
+    J = jacobian(T, revolute) # Compute velocities using transforms and joint type
     
     # Update control
     PP = robotPoints2D(T)
     sigma = T[-1][0:2,3].reshape(2,1)# Current position of the end-effector
-    err = sigma_d - sigma    # Error in position
-    Jbar = J[0:2, :]         # Task Jacobian
-    P = np.eye(3) - np.linalg.pinv(Jbar)@Jbar   # Null space projector
+    err = sigma_d - sigma    # Compute the position error by subtracting the current position from the desired position (sigma_d)
+    Jbar = J[0:2, :]         # Task Jacobian: first two rows corresponds to velocity in x and y
+    P = np.eye(3) - np.linalg.pinv(Jbar)@Jbar   # Null space projector: # P = I - Jbar_pinv * Jbar
     y = np.array([np.sin(t),np.cos(t),np.sin(t)]).reshape(3,1) # Arbitrary joint velocity
-    dq = np.linalg.pinv(Jbar)@K@err + P@y                    # Control signal
-    q = q + dt * dq.reshape(3) # Simulation update
+    # Compute the control signal (dq) for the joints
+    # The control signal includes two terms:
+    # 1. A term that ensures the end-effector follows the desired path based on the Jacobian and position error
+    # dq1 = Jbar_pinv * K * err
+    # 2. A term that projects the arbitrary joint velocities into the null space to avoid joint limits
+    # dq2 = P * y
+    dq = np.linalg.pinv(Jbar)@K@err + P@y                       
+    q = q + dt * dq.reshape(3) # Update the joint angles
 
     # Update drawing
     line.set_data(PP[0,:], PP[1,:])
@@ -99,4 +99,5 @@ plt.ylabel('Joint Angle [rad]')
 plt.title('Joint Positions over Time')
 plt.legend()
 plt.grid(True)
+plt.savefig("e1.png")
 plt.show()
