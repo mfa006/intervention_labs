@@ -74,80 +74,58 @@ def init():
     # print(current_goal_idx,sigma1_d)
     return line, path, point
 
-# Simulation loop
 def simulate(t):
     global q, a, d, alpha, revolute, sigma1_d, sigma2_d
-    global PPx, PPy, current_goal_idx
-    
-    # Update robot
+    global PPx, PPy, current_goal_idx, dt
+
+    # Compute forward kinematics and Jacobian
     T = kinematics(d, q.flatten(), a, alpha)
     J = jacobian(T, revolute)
-    # Update control
-    # Choose the case based on the flag
+
+    # Task definitions (end-effector & joint position control)
+    sigma1 = T[-1][0:2, -1].reshape(2, 1)  # End-effector position
+    sigma2 = q[0]                          # Joint 1 position
+    err1 = sigma1_d - sigma1               # End-effector error
+    err2 = sigma2_d - sigma2               # Joint 1 error
+    x1_dot = K1 @ err1                     # Desired velocity for Task 1
+    x2_dot = K2 @ err2                     # Desired velocity for Task 2
+
+    # Define Jacobians
+    J_ee = J[0:2, :]                             # End-effector Jacobian
+    J_joint = np.array([1, 0, 0]).reshape(1, 3)  # Joint position Jacobian
+
+    # Determine task priority
     if task_flag == 1:
-        # CASE 1: End-effector position control as the top hierarchy task
-        # TASK 1: End-effector position control
-        sigma1 = T[-1][0:2, -1].reshape(2, 1)   # Current position of the end-effector
-        err1 = sigma1_d - sigma1                # Error in Cartesian position
-        x1_dot = K1 @ err1                      # Velocity for the first task
-        J1 = J[0:2, :]                          # Jacobian of the first task
-        P1 = np.eye(3) - np.linalg.pinv(J1) @ J1# Null space projector
-        
-        # TASK 2: Joint position control
-        sigma2 = q[0]                           # Current position of joint 1
-        err2 = sigma2_d - sigma2                # Error in joint position
-        x2_dot = K2 @ err2                      # Velocity for the second task
-        J2 = np.array([1, 0, 0]).reshape(1, 3)  # Jacobian of the second task
-        J2bar = J2 @ P1                         # Augmented Jacobian
-        
-        # Combining tasks
-        J_DLS1 = DLS(J1, 0.1)                   # DLS for the first task
-        J_DLS2 = DLS(J2bar, 0.1)                # DLS for the second task
-        dq1 = (J_DLS1 @ x1_dot).reshape(3, 1)   # Velocity for the first task
-        dq12 = dq1 + J_DLS2 @ (x2_dot - J2 @ dq1)# Velocity for both tasks
-  
+        J1, J2, x1, x2 = J_ee, J_joint, x1_dot, x2_dot
     elif task_flag == 2:
-        # CASE 2: Joint position control as the top hierarchy task
-        # TASK 1: Joint position control
-        sigma2 = q[0]                           # Current position of joint 1
-        err2 = sigma2_d - sigma2                # Error in joint position
-        x2_dot = K2 @ err2                      # Velocity for the second task
-        J1 = np.array([1, 0, 0]).reshape(1, 3)  # Jacobian of the second task
-        P1 = np.eye(3) - np.linalg.pinv(J1) @ J1# Null space projector
+        J1, J2, x1, x2 = J_joint, J_ee, x2_dot, x1_dot
 
-            
-        # TASK 2: End-effector position control
-        sigma1 = T[-1][0:2, -1].reshape(2, 1)   # Current position of the end-effector
-        err1 = sigma1_d - sigma1                # Error in Cartesian position
-        x1_dot = K1 @ err1                      # Velocity for the first task
-        J2 = J[0:2, :]                          # Jacobian of the first task
-        J2bar = J2 @ P1                         # Augmented Jacobian
+    # Compute null space projection
+    P1 = np.eye(3) - np.linalg.pinv(J1) @ J1
+    J2bar = J2 @ P1
 
-        # Combining tasks
-        J_DLS1 = DLS(J1, 0.1)                   # DLS for the first task
-        J_DLS2 = DLS(J2bar, 0.1)                # DLS for the second task
-        dq2 = (J_DLS1 @ x2_dot).reshape(3, 1)   # Velocity for the first task
-        dq12 = dq2 + J_DLS2 @ (x1_dot - J1 @ dq2)# Velocity for both tasks
- 
-    q = q + dq12 * dt                           # Simulation update
+    # Compute damped least squares solutions
+    J_DLS1 = DLS(J1, 0.1)
+    J_DLS2 = DLS(J2bar, 0.1)
 
-    # Update drawing
+    # Compute joint velocities
+    dq1 = (J_DLS1 @ x1).reshape(3, 1)
+    dq12 = dq1 + J_DLS2 @ (x2 - J2 @ dq1)
+
+    # Update joint positions
+    q = q + dq12 * dt
+
+    # Update visualization
     PP = robotPoints2D(T)
-    line.set_data(PP[0,:], PP[1,:])
-    PPx.append(PP[0,-1])
-    PPy.append(PP[1,-1])
+    line.set_data(PP[0, :], PP[1, :])
+    PPx.append(PP[0, -1])
+    PPy.append(PP[1, -1])
     path.set_data(PPx, PPy)
-    
-    # point.set_data(sigma1_d[0], sigma1_d[1]) #goal
-    #for error normalization
-    err_joint_pos1_norm = np.linalg.norm(err2)  # Joint 1 position error normalized
-    err_ee_pose_norm = np.linalg.norm(err1)     # End-effector position error normalized
 
-    #for plotting
-    ee_pose.append(err_ee_pose_norm)
-    joint_pos1.append(err_joint_pos1_norm)
-    # time_vector.append(t)
-    
+    # Compute error norms for plotting
+    ee_pose.append(np.linalg.norm(err1))
+    joint_pos1.append(np.linalg.norm(err2))
+
     return line, path, point
 
 # Run simulation
