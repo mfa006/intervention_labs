@@ -26,8 +26,7 @@ tasks = [
 K = 1.5
 tasks[0].setK(K)
 # Set up FFV
-FFV = 0.0
-tasks[0].setFeedForwardVelocity(FFV)
+tasks[0].setFeedForwardVelocity(0)
 
 
 # Simulation params
