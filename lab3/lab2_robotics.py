@@ -1,5 +1,6 @@
 import numpy as np 
 from scipy.linalg import block_diag
+import math
 
 
 def DH(d, theta, a, alpha):
@@ -20,23 +21,28 @@ def DH(d, theta, a, alpha):
     # 2. Multiply matrices in the correct order (result in T).
     
     # Translation along z-axis
-    M1 = block_diag(np.identity(2), np.identity(2))
-    M1[2, 3] = d
+    # M1 = block_diag(np.identity(2), np.identity(2))
+    # M1[2, 3] = d
 
-    # Rotation about z-axis
-    M2 = block_diag(np.array([[np.cos(theta), -np.sin(theta)],
-                              [np.sin(theta),  np.cos(theta)]]), 1, 1)
+    # # Rotation about z-axis
+    # M2 = block_diag(np.array([[np.cos(theta), -np.sin(theta)],
+    #                           [np.sin(theta),  np.cos(theta)]]), 1, 1)
 
-    # Translation along x-axis
-    M3 = block_diag(np.identity(2), np.identity(2))
-    M3[0, -1] = a
+    # # Translation along x-axis
+    # M3 = block_diag(np.identity(2), np.identity(2))
+    # M3[0, -1] = a
 
-    # Rotation about x-axis
-    M4 = block_diag(1, np.array([[np.cos(alpha), -np.sin(alpha)],
-                                 [np.sin(alpha),  np.cos(alpha)]]), 1)
+    # # Rotation about x-axis
+    # M4 = block_diag(1, np.array([[np.cos(alpha), -np.sin(alpha)],
+    #                              [np.sin(alpha),  np.cos(alpha)]]), 1)
 
-    # Combine all transformations
-    T = M1 @ M2 @ M3 @ M4
+    # # Combine all transformations
+    # T = M1 @ M2 @ M3 @ M4
+    # return T
+    T = np.array([[math.cos(theta), -math.sin(theta)*math.cos(alpha), math.sin(theta)*math.sin(alpha), a*math.cos(theta)],
+                   [math.sin(theta), math.cos(theta)*math.cos(alpha), -math.cos(theta)*math.sin(alpha), a*math.sin(theta)],
+                   [0, math.sin(alpha), math.cos(alpha), d],
+                   [0, 0, 0, 1]])
     return T
 
 def kinematics(d, theta, a, alpha):
