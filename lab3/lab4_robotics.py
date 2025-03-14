@@ -222,37 +222,36 @@ class Position2D(Task):
 '''
 class Orientation2D(Task):
     # exercise 1
-    def __init__(self, name, desired):
-        super().__init__(name, desired)
-        self.J = np.zeros((1,3)) # Initialize with proper dimensions
-        self.err = np.array([0]) # Initialize with proper dimensions
-        self.desired= desired
+    # def __init__(self, name, desired):
+    #     super().__init__(name, desired)
+    #     self.J = np.zeros((1,3)) # Initialize with proper dimensions
+    #     self.err = np.array([0]) # Initialize with proper dimensions
 
     # exercise 2
-    # def __init__(self, name, desired, link): # with link index.
-    #     super().__init__(name, desired)
-    #     self.J = np.zeros((len(desired), 3))  
-    #     self.FFVelocity = np.zeros_like(desired)  
-    #     self.K = np.eye(len(desired))  
-    #     self.link = link
+    def __init__(self, name, desired, link): # with link index.
+        super().__init__(name, desired)
+        self.J = np.zeros((len(desired), 3))  
+        self.FFVelocity = np.zeros_like(desired)  
+        self.K = np.eye(len(desired))  
+        self.link = link
         
     def update(self, robot):
         # exercise 1
-        self.J = robot.getEEJacobian()[2,:].reshape(1,3) # Update task Jacobian
-        sigma = np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0]).reshape(1,1)
-        self.err = self.getDesired() - sigma # Update task error
-        self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
+        # self.J = robot.getEEJacobian()[2,:].reshape(1,3) # Update task Jacobian
+        # sigma = np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0]).reshape(1,1)
+        # self.err = self.getDesired() - sigma # Update task error
+        # self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
         
-        self.J = robot.getEEJacobian()[5,:].reshape(len(self.desired),3)
-        angle = np.arctan2(robot.getEETransform()[1,0], robot.getEETransform()[0,0])
-        self.err = (self.getDesired() - angle)
+        # self.J = robot.getEEJacobian()[5,:].reshape(len(self.desired),3)
+        # angle = np.arctan2(robot.getEETransform()[1,0], robot.getEETransform()[0,0])
+        # self.err = (self.getDesired() - angle)
 
         # exercise 2
-        # self.J = robot.getLinkJacobian(self.link)[-1, :].reshape((len(self.sigma_d), 3))
-        # angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])
-        # self.err = self.getDesired() - angle
+        self.J = robot.getLinkJacobian(self.link)[-1, :].reshape((len(self.sigma_d), 3))
+        angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])
+        self.err = self.getDesired() - angle
 
-        # self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
+        self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
 
 
 '''
