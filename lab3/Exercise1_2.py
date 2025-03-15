@@ -13,14 +13,14 @@ robot = Manipulator(d, theta, a, alpha, revolute) # Manipulator object
 # Task hierarchy definition
 tasks = [ 
     # Exercise 1
-    # Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2,1)),  #6a/6c/6d Task for end-effector position
+    Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2,1)),  #6a/6c/6d Task for end-effector position
     # Orientation2D("End-effector orientation", np.array(np.pi).reshape(1,1))  #6c Task for end-effector orientation
     # Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1)), #6b
-    # JointPosition("Joint 1 position", np.array([0]).reshape(1,1), joint=0)  # Ensure shape (1,1) #6d
+    JointPosition("Joint 1 position", np.array([0]).reshape(1,1), joint=0)  # Ensure shape (1,1) #6d
 
     # Exercise 2
-    Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1),link=3), 
-    Orientation2D("End-effector orientation", np.array([[np.pi]]), link=2),
+    # Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1),link=3), 
+    # Orientation2D("End-effector orientation", np.array([[np.pi]]), link=2),
 ]
  
 # Set K matrix for task 1

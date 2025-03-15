@@ -185,35 +185,42 @@ class Task:
 '''
 class Position2D(Task):
     #for exercise 1
-    # def __init__(self, name, desired):
-    #     super().__init__(name, desired)
-    #     self.J = np.zeros((2,3))# Initialize with proper dimensions
-    #     self.err = np.zeros((2,1))# Initialize with proper dimensions
+    def __init__(self, name, desired):
+        super().__init__(name, desired)
+        self.J = np.zeros((2,3))# Initialize with proper dimensions
+        self.err = np.zeros((2,1))# Initialize with proper dimensions
     
     #for exercise 2
-    def __init__(self, name, desired, link): # with link index.
-        super().__init__(name, desired)
-        self.J = np.zeros((len(desired), 3))     # Initialize with proper dimensions
-        self.err = np.zeros_like(desired)   # Initialize with proper dimensions
-        self.link = link            # Store selected link index
-        self.FFVelocity = np.zeros_like(desired) # Initialize feedforward velocity vector
-        self.K = np.eye(len(desired)) # Initialize gain matrix K
+    # def __init__(self, name, desired, link): # with link index.
+    #     super().__init__(name, desired)
+    #     self.J = np.zeros((len(desired), 3))     # Initialize with proper dimensions
+    #     self.err = np.zeros_like(desired)   # Initialize with proper dimensions
+    #     self.link = link            # Store selected link index
+    #     self.FFVelocity = np.zeros_like(desired) # Initialize feedforward velocity vector
+    #     self.K = np.eye(len(desired)) # Initialize gain matrix K
 
 
         
     def update(self, robot):
         # exercise 1
-        # self.J = robot.getEEJacobian()[:2,:]         # Update task Jacobian
-        # sigma = robot.getEETransform()[:2,-1].reshape(2,1) 
-        # self.err = self.getDesired() - sigma # Update task error
-        # self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
+        self.J = robot.getEEJacobian()[:2,:]         # Update task Jacobian
+        # Extract the position of the end-effector from the transformation matrix.
+        sigma = robot.getEETransform()[:2,-1].reshape(2,1)
+        # Calculate the error between the desired and actual position of the end-effector.
+        self.err = self.getDesired() - sigma
+        # Track the error norm to monitor the task progress.
+        self.error_norm.append(np.linalg.norm(self.err))
 
         # exercise 2
-        self.J = robot.getLinkJacobian(self.link)[:len(self.sigma_d), :]
-        sigma = robot.getLinkTransformation(self.link)[:len(self.sigma_d), 3].reshape(len(self.sigma_d),1)
-        self.err = self.getDesired() - sigma
+        # # Update task Jacobian for the link, considering the dimensions of the desired state.
+        # self.J = robot.getLinkJacobian(self.link)[:len(self.sigma_d), :]
+        # # Extract the position of the link from the transformation matrix and reshape.
+        # sigma = robot.getLinkTransformation(self.link)[:len(self.sigma_d), 3].reshape(len(self.sigma_d),1)
+        # # Calculate the error between the desired and actual position of the link.
+        # self.err = self.getDesired() - sigma
 
-        self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
+        # # Append the error norm to track the task progress.
+        # self.error_norm.append(np.linalg.norm(self.err))
 
 
          
@@ -222,37 +229,46 @@ class Position2D(Task):
 '''
 class Orientation2D(Task):
     # exercise 1
-    # def __init__(self, name, desired):
-    #     super().__init__(name, desired)
-    #     self.J = np.zeros((1,3)) # Initialize with proper dimensions
-    #     self.err = np.array([0]) # Initialize with proper dimensions
-
-    # exercise 2
-    def __init__(self, name, desired, link): # with link index.
+    def __init__(self, name, desired):
         super().__init__(name, desired)
-        self.J = np.zeros((len(desired), 3))  
-        self.FFVelocity = np.zeros_like(desired)  
-        self.K = np.eye(len(desired))  
-        self.link = link
+        self.J = np.zeros((1,3)) # Initialize with proper dimensions
+        self.err = np.array([0]) # Initialize with proper dimensions
+        self.desired = desired
+    # exercise 2
+    # def __init__(self, name, desired, link): # with link index.
+    #     super().__init__(name, desired)
+    #     self.J = np.zeros((len(desired), 3))  
+    #     self.FFVelocity = np.zeros_like(desired)  
+    #     self.K = np.eye(len(desired))  
+    #     self.link = link
         
     def update(self, robot):
         # exercise 1
-        # self.J = robot.getEEJacobian()[2,:].reshape(1,3) # Update task Jacobian
-        # sigma = np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0]).reshape(1,1)
-        # self.err = self.getDesired() - sigma # Update task error
-        # self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
-        
-        # self.J = robot.getEEJacobian()[5,:].reshape(len(self.desired),3)
-        # angle = np.arctan2(robot.getEETransform()[1,0], robot.getEETransform()[0,0])
-        # self.err = (self.getDesired() - angle)
+        # Update task Jacobian for orientation by extracting the third row of the end-effector's Jacobian.
+        self.J = robot.getEEJacobian()[2,:].reshape(1,3)
+        # Compute the current orientation of the end-effector using arctangent from the transformation matrix.
+        sigma = np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0]).reshape(1,1)
+        # Calculate the error between the desired and actual orientation.
+        self.err = self.getDesired() - sigma 
+        # Append the norm of the error to track the task progress.
+        self.error_norm.append(np.linalg.norm(self.err))
+        # Update task Jacobian for a different orientation component (6th row).
+        self.J = robot.getEEJacobian()[5,:].reshape(len(self.desired),3)
+        # Recompute the current orientation using arctangent.
+        angle = np.arctan2(robot.getEETransform()[1,0], robot.getEETransform()[0,0])
+        # Calculate the error between the desired and actual orientation.
+        self.err = (self.getDesired() - angle)
 
         # exercise 2
-        self.J = robot.getLinkJacobian(self.link)[-1, :].reshape((len(self.sigma_d), 3))
-        angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])
-        self.err = self.getDesired() - angle
+        # # Update task Jacobian for the link by extracting the last row of the link's Jacobian.
+        # self.J = robot.getLinkJacobian(self.link)[-1, :].reshape((len(self.sigma_d), 3))
+        # # Compute the current orientation of the link using arctangent from the transformation matrix.
+        # angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])
+        # # Calculate the error between the desired and actual orientation of the link.
+        # self.err = self.getDesired() - angle
 
-        self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
-
+        # Append the norm of the error to track the task progress.
+        self.error_norm.append(np.linalg.norm(self.err))
 
 '''
     Subclass of Task, representing the 2D configuration task.
@@ -276,15 +292,12 @@ class Configuration2D(Task):
         # exercise 1
         ee_jacobian = robot.getEEJacobian()  # Full end-effector Jacobian
         ee_transform = robot.getEETransform()  # End-effector transformation matrix
-
-        # Assign Jacobian components
+        # Assign Jacobian component
         self.J[:2, :] = ee_jacobian[:2, :]  # First two rows for position
         self.J[2, :] = ee_jacobian[5, :]  # Third row for orientation (rotation about Z)
-
         # Compute end-effector position and orientation
         position = ee_transform[:2, -1].reshape(2,1)  # Extract (x, y)
         orientation = np.array([[np.arctan2(ee_transform[1, 0], ee_transform[0, 0])]])  # Extract θ (orientation)
-
         # Compute error
         sigma = np.vstack([position, orientation])  # Stack position and orientation
         self.err = self.getDesired() - sigma  # Compute error for full configuration (x, y, θ)
@@ -314,4 +327,5 @@ class JointPosition(Task):
 
         sigma = robot.getJointPos(self.joint).reshape(1, 1)  # Get selected joint position
         self.err = self.getDesired() - sigma  # Compute joint position error
+
         self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
