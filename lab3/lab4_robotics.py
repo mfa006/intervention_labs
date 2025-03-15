@@ -14,16 +14,21 @@ def jacobianLink(T, revolute, link): # Needed in Exercise 2
         Returns:
         (Numpy array): end-effector Jacobian
     '''
-    # Code almost identical to the one from lab2_robotics...
-    
-    J_link = jacobian(T, revolute)  # the full Jacobian for the end-effector
-    
-    
-    J_link[:, link:] = np.zeros_like(J_link[:, link:])  # excludingg the contribution of joints beyond the specified link 
-                                                        # (1a: taking the index of the link used as the end of the chain.)
-    
-    return J_link
 
+    # Code almost identical to the one from lab2_robotics ...
+    # 1. Truncate transformations and joint types up to the target link
+    T_truncated = T[:link+1]  # Transformations up to the specified link
+    revolute_truncated = revolute[:link]  # Joints affecting the link
+
+    # 2. Call the original jacobian function with truncated data
+    J_truncated = jacobian(T_truncated, revolute_truncated)  # Shape: (6, link)
+
+    # 3. Pad with zeros to match the full robot's joint count
+    n_joints = len(T) - 1  # Total joints in the original robot
+    J = np.zeros((6, n_joints))  # Initialize full-sized Jacobian
+    J[:, :link] = J_truncated  # Fill only the relevant columns
+
+    return J
 
 '''
     Class representing a robotic manipulator.
@@ -250,6 +255,11 @@ class Orientation2D(Task):
         angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])
         self.err = self.getDesired() - angle
 
+        # self.J = robot.getLinkJacobian(self.link)[-1, :].reshape((1, 3))  # Update task Jacobian
+        # T = robot.getLinkTransformation(self.link)  # Get Transformations matrix form robot
+        # yaw = np.arctan2(T[1, 0], T[0, 0]).reshape(self.sigma_d.shape)  # Extract yaw from Transformation matrix
+        # self.err = self.getDesired() - yaw  # Update task error
+
         self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
 
 
@@ -272,13 +282,6 @@ class Configuration2D(Task):
         self.link = link
         
     def update(self, robot):
-        # self.J[:2, :] = robot.getEEJacobian()[:2, :] # Update task Jacobian
-        # self.J[2, :] = robot.getEEJacobian()[5, :] # Update task Jacobian
-        # angle = np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0])
-        # sigma = robot.getEETransform()[:2,-1].reshape(2,1)
-        # self.err[:2] = self.getDesired()[:2] - sigma # Ensure correct shape # Update task error
-        # self.err[2] = self.getDesired()[2] - angle # Update task error
-
         # exercise 1
         # ee_jacobian = robot.getEEJacobian()  # Full end-effector Jacobian
         # ee_transform = robot.getEETransform()  # End-effector transformation matrix

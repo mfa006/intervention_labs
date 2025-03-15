@@ -4,9 +4,9 @@ import matplotlib.animation as anim
 import numpy as np
 # Robot model - 3-link manipulator
 d = np.zeros(3)                 # displacement along Z-axis
-theta = np.array([0, np.pi/4, np.pi/4]).reshape(3, 1) # rotation around Z-axis
+theta = np.zeros(3) # np.array([0, np.pi/4, np.pi/4]).reshape(3, 1) # rotation around Z-axis
 alpha = np.zeros(3)             # rotation around X-axis
-a = np.array([0.75, 0.5, 0.25])  # displacement along X-axis
+a = np.array([0.75, 0.5, 0.5])  # displacement along X-axis
 revolute = np.array([True,True,True])             # flags specifying the type of joints
 robot = Manipulator(d, theta, a, alpha, revolute) # Manipulator object
 # sigma_d = T[-1][0:2,3].reshape(2,1)
@@ -19,11 +19,11 @@ tasks = [
 
     # Exercise 2
     Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1), link=3), 
-    Orientation2D("End-effector orientation", np.array([[np.pi]]), link=2),
+    Orientation2D("End-effector orientation", np.array([[0]]), link=2),
 ]
  
 # Set K matrix for task 1
-K = 1.5
+K = 2
 tasks[0].setK(K)
 # Set up FFV
 tasks[0].setFeedForwardVelocity(0)
@@ -58,9 +58,9 @@ def init():
 
     #Choosing the desired pos of end effector
     if tasks[0].name == "End-effector configuration":
-        tasks[0].setDesired(np.array([np.random.uniform(-1, 1), np.random.uniform(-1.5, 1.5), 0.2]).reshape(3,1))
+        tasks[0].setDesired(np.array([np.random.uniform(-1.5, 1.5), np.random.uniform(-1, 1), 0.2]).reshape(3,1))
     else:
-        tasks[0].setDesired(np.array([np.random.uniform(-1, 1), np.random.uniform(-1.5, 1.5)]).reshape(2,1))
+        tasks[0].setDesired(np.array([np.random.uniform(-1.5, 1.5), np.random.uniform(-1, 1)]).reshape(2,1))
     
     if time_vector:
         last_log = time_vector[-1]
@@ -94,6 +94,7 @@ def simulate(t):
         # dq = dq + DLS(J_bar, 0.1)@(task.getError() - task.getJacobian()@dq)
 
         # exercise 2
+        print("Task:", task.name)
         print("FFVelocity shape:", task.getFeedForwardVelocity().shape)
         print("K shape:", task.getK().shape)
         print("Error shape:", task.getError().shape)
