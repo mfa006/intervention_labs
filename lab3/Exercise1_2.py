@@ -25,10 +25,9 @@ tasks = [
     # Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1), link=3),
 ]
  
-# Set K matrix for task 1
-K = 2
-tasks[0].setK(K)
-# Set up FFV
+# K gain and feed-forward velocity setup for exercise 2
+K = 2   # We tried these Gains [1, 1.5, and 2]
+tasks[0].setK(K) 
 tasks[0].setFeedForwardVelocity(0)
 
 
