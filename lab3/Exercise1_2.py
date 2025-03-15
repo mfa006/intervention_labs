@@ -20,7 +20,7 @@ tasks = [
 
     # Exercise 2
     Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1),link=3), 
-    Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1), link=3),
+    Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1), link=1),
     # Orientation2D("End-effector orientation", np.array([[np.pi]]), link=2),
 ]
  
