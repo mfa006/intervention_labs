@@ -60,9 +60,9 @@ def init():
 
     #Choosing the desired pos of end effector
     if tasks[0].name == "End-effector configuration":
-        tasks[0].setDesired(np.array([np.random.uniform(-1.5, 1.5), np.random.uniform(-1, 1), 0.2]).reshape(3,1))
+        tasks[0].setDesired(np.array([np.random.uniform(-1, 1), np.random.uniform(-1, 1), 0.2]).reshape(3,1))
     else:
-        tasks[0].setDesired(np.array([np.random.uniform(-1.5, 1.5), np.random.uniform(-1, 1)]).reshape(2,1))
+        tasks[0].setDesired(np.array([np.random.uniform(-1, 1), np.random.uniform(-1, 1)]).reshape(2,1))
     
     if time_vector:
         last_log = time_vector[-1]
