@@ -13,14 +13,14 @@ robot = Manipulator(d, theta, a, alpha, revolute) # Manipulator object
 # Task hierarchy definition
 tasks = [ 
     # Exercise 1
-    Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2,1), robot),  # Task for end-effector position
+    # Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2,1), robot),  # Task for end-effector position
     # Orientation2D("End-effector orientation", np.array([0]).reshape(1,1), robot)  # Task for end-effector orientation
     # Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1), robot),
     # JointPosition("Joint 1 position", np.array([0]).reshape(1,1), robot, joint=0)  # Ensure shape (1,1)
 
     # Exercise 2
-    # Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1), robot, link=3), 
-    # Orientation2D("End-effector orientation", np.array([0]), robot, link=2),
+    Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1), robot, link=3), 
+    Orientation2D("End-effector orientation", np.array([0]), robot, link=2),
 
     # Checking if the Configuration2D works
     # Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1), robot, link=3),
@@ -131,7 +131,7 @@ for i, task in enumerate(tasks):
     plt.plot(time_vector, task.error_norm, label="e{} ({})".format(i+1, task.name))
 plt.xlabel('Time [s]')
 plt.ylabel('Error [1]')
-plt.title('Priority Task: Control Error Norm for {}'.format(' and '.join([task.name for task in tasks])))
+plt.title('Priority Task: Control Error Norm for Gain:{}\n Tasks: {}'.format(K,' and '.join([task.name for task in tasks])))
 plt.legend()
 plt.grid(True)
 filename = "error_{}.png".format('_'.join([task.name.replace(' ', '_') for task in tasks]))
