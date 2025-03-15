@@ -16,17 +16,27 @@ def jacobianLink(T, revolute, link): # Needed in Exercise 2
     '''
 
     # Code almost identical to the one from lab2_robotics ...
-    # 1. Truncate transformations and joint types up to the target link
-    T_truncated = T[:link+1]  # Transformations up to the specified link
-    revolute_truncated = revolute[:link]  # Joints affecting the link
+    # Initializing the Jacobian with the same dimensions as the original code
+    J = np.zeros((6, len(T)-1))  # len(T)-1 = number of joints
 
-    # 2. Call the original jacobian function with truncated data
-    J_truncated = jacobian(T_truncated, revolute_truncated)  # Shape: (6, link)
+    # Storing the transformation of the TARGET LINK (instead of end-effector)
+    T_n = T[link]  # Use the specified link's transformation
+    O_n = T_n[:3, 3]  # Position of the target link
 
-    # 3. Pad with zeros to match the full robot's joint count
-    n_joints = len(T) - 1  # Total joints in the original robot
-    J = np.zeros((6, n_joints))  # Initialize full-sized Jacobian
-    J[:, :link] = J_truncated  # Fill only the relevant columns
+    # 2. For each joint UP TO THE TARGET LINK
+    for i in range(link):  # Only consider joints affecting the specified link
+        # a. Extract z and o (identical to your original code)
+        z_i = T[i][:3, 2]  # Z-axis of joint i
+        O_i = T[i][:3, 3]  # Position of joint i
+
+        # b. Check joint type (your original logic)
+        rol = 1 if revolute[i] else 0  # Flag for revolute joint
+
+        # c. Modify Jacobian column (same formula as your code)
+        # Linear velocity component
+        J[:3, i] = rol * np.cross(z_i, (O_n - O_i)) + (1 - rol) * z_i
+        # Angular velocity component
+        J[3:, i] = rol * z_i
 
     return J
 
@@ -306,7 +316,7 @@ class Configuration2D(Task):
         angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])
         self.err[:-1] = self.getDesired()[:-1] - robot.getLinkTransformation(self.link)[:2, 3].reshape(2,1)
         self.err[-1] = self.getDesired()[-1] - angle
-        
+
         self.error_norm.append(np.linalg.norm(self.err))
 
 ''' 

@@ -133,7 +133,7 @@ plt.show()
 # Plotting error
 plt.figure(figsize=(8, 6))
 plt.plot(time_vector, tasks[0].error_norm, label="e1 ({})".format(tasks[0].name))
-# plt.plot(time_vector, tasks[1].error_norm, label="e1 ({})".format(tasks[1].name))
+plt.plot(time_vector, tasks[1].error_norm, label="e1 ({})".format(tasks[1].name))
 plt.xlabel('Time [s]')
 plt.ylabel('Error [1]')
 plt.title('Priority Task: Evolution of the TP control errors.')
