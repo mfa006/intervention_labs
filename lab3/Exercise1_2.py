@@ -20,6 +20,9 @@ tasks = [
     # Exercise 2
     Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1), link=3), 
     Orientation2D("End-effector orientation", np.array([[0]]), link=2),
+
+    # Checking if the Configuration2D works
+    # Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1), link=3),
 ]
  
 # Set K matrix for task 1
@@ -131,7 +134,7 @@ plt.show()
 # Plotting error
 plt.figure(figsize=(8, 6))
 plt.plot(time_vector, tasks[0].error_norm, label="e1 ({})".format(tasks[0].name))
-plt.plot(time_vector, tasks[1].error_norm, label="e1 ({})".format(tasks[1].name))
+# plt.plot(time_vector, tasks[1].error_norm, label="e1 ({})".format(tasks[1].name))
 plt.xlabel('Time [s]')
 plt.ylabel('Error [1]')
 plt.title('Priority Task: Evolution of the TP control errors.')

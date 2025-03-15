@@ -280,6 +280,8 @@ class Configuration2D(Task):
         self.FFVelocity = np.zeros_like(desired)  
         self.K = np.eye(len(desired))  
         self.link = link
+        self.err = np.zeros((len(desired),1)) # Initialize with proper dimensions
+
         
     def update(self, robot):
         # exercise 1
@@ -302,10 +304,10 @@ class Configuration2D(Task):
         self.J[:len(self.sigma_d)-1, :] = robot.getLinkJacobian(self.link)[:len(self.sigma_d)-1, :]
         self.J[-1, :] = robot.getLinkJacobian(self.link)[-1, :]
         angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])
-        self.err[:-1] = self.getDesired()[:-1] - robot.getLinkTransformation(self.link)[:-1, 3].reshape(self.sigma_d.shape[:-1])
+        self.err[:-1] = self.getDesired()[:-1] - robot.getLinkTransformation(self.link)[:2, 3].reshape(2,1)
         self.err[-1] = self.getDesired()[-1] - angle
-
-        self.error_norm.append(np.linalg.norm(self.err)) # Update error norm
+        
+        self.error_norm.append(np.linalg.norm(self.err))
 
 ''' 
     Subclass of Task, representing the joint position task.
