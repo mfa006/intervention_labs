@@ -2,6 +2,7 @@ from lab4_robotics import * # Includes numpy import
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 import numpy as np
+
 # Robot model - 3-link manipulator
 d = np.zeros(3)                 # displacement along Z-axis
 theta = np.zeros(3) # np.array([0, np.pi/4, np.pi/4]).reshape(3, 1) # rotation around Z-axis
@@ -10,6 +11,7 @@ a = np.array([0.75, 0.5, 0.5])  # displacement along X-axis
 revolute = np.array([True,True,True])             # flags specifying the type of joints
 robot = Manipulator(d, theta, a, alpha, revolute) # Manipulator object
 # sigma_d = T[-1][0:2,3].reshape(2,1)
+
 # Task hierarchy definition
 tasks = [ 
     # Exercise 1
@@ -25,9 +27,15 @@ tasks = [
     # Checking if the Configuration2D works
     # Configuration2D("End-effector configuration", np.array([1.0, 0.5, np.pi]).reshape(3,1), robot, link=3),
 ]
- 
+
+tasks = [
+    # Exercise 2
+    Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1), robot, link=3), 
+    Orientation2D("End-effector orientation", np.array([0]), robot, link=2)
+]
+
 # K gain and feed-forward velocity setup for exercise 2
-K = 2   # We tried these Gains [1, 1.5, and 2]
+K = 0.5   # We tried these Gains [0.5, 1.5, and 100]
 tasks[0].setK(K) 
 tasks[0].setFeedForwardVelocity(0)
 
@@ -92,12 +100,12 @@ def simulate(t):
         #exercise 1
         # Compute task velocityrobot.getDOF()
         # Accumulate velocity
-        dq = dq + DLS(J_bar, 0.1)@(task.getError() - task.getJacobian()@dq)
+        # dq = dq + DLS(J_bar, 0.1)@(task.getError() - task.getJacobian()@dq)
 
         # exercise 2
         # Compute task velocityrobot.getDOF()
         # Accumulate velocity
-        # dq = dq + DLS(J_bar,0.1) @ (task.getFeedForwardVelocity() + task.getK() @ task.getError() - task.getJacobian() @ dq) 
+        dq = dq + DLS(J_bar,0.1) @ (task.getFeedForwardVelocity() + task.getK() @ task.getError() - task.getJacobian() @ dq) 
 
         # Update null-space projector
         P = P - np.linalg.pinv(J_bar) @ J_bar
