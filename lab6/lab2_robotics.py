@@ -17,38 +17,20 @@ def DH(d, theta, a, alpha):
         Returns:
         (Numpy array): composition of elementary DH transformations
     '''
-    # 1. Build matrices representing elementary transformations (based on input parameters).
-    # 2. Multiply matrices in the correct order (result in T).
-    
-    # Translation along z-axis
-    # M1 = block_diag(np.identity(2), np.identity(2))
-    # M1[2, 3] = d
-
-    # # Rotation about z-axis
-    # M2 = block_diag(np.array([[np.cos(theta), -np.sin(theta)],
-    #                           [np.sin(theta),  np.cos(theta)]]), 1, 1)
-
-    # # Translation along x-axis
-    # M3 = block_diag(np.identity(2), np.identity(2))
-    # M3[0, -1] = a
-
-    # # Rotation about x-axis
-    # M4 = block_diag(1, np.array([[np.cos(alpha), -np.sin(alpha)],
-    #                              [np.sin(alpha),  np.cos(alpha)]]), 1)
-
-    # # Combine all transformations
-    # T = M1 @ M2 @ M3 @ M4
-    # return T
     T = np.array([[math.cos(theta), -math.sin(theta)*math.cos(alpha), math.sin(theta)*math.sin(alpha), a*math.cos(theta)],
                    [math.sin(theta), math.cos(theta)*math.cos(alpha), -math.cos(theta)*math.sin(alpha), a*math.sin(theta)],
                    [0, math.sin(alpha), math.cos(alpha), d],
                    [0, 0, 0, 1]])
     return T
 
-def kinematics(d, theta, a, alpha):
+
+
+# 5) Modification of the kinematics() function, to be able to pass the base transformation as a parameter.
+
+def kinematics(d, theta, a, alpha, Tb=np.eye(4)):
     '''
         Functions builds a list of transformation matrices, for a kinematic chain,
-        descried by a given set of Denavit-Hartenberg parameters. 
+        described by a given set of Denavit-Hartenberg parameters. 
         All transformations are computed from the base frame.
 
         Arguments:
@@ -56,18 +38,20 @@ def kinematics(d, theta, a, alpha):
         theta (list of double): list of rotations around Z-axis
         a (list of double): list of displacements along X-axis
         alpha (list of double): list of rotations around X-axis
+        Tb (Numpy array): base transformation (default identity)
 
         Returns:
         (list of Numpy array): list of transformations along the kinematic chain (from the base frame)
     '''
-    T = [np.eye(4)] # Base transformation
+    T = [Tb] # base transformation
     # For each set of DH parameters:
-    # 1. Compute the DH transformation matrix.
-    # 2. Compute the resulting accumulated transformation from the base frame.
-    # 3. Append the computed transformation to T.
-    for d_i,theta_i,a_i,alpha_i in zip(d,theta,a,alpha):
-        T.append(T[-1]@DH(d_i,theta_i,a_i,alpha_i))
-        #Appending a new transformation after multiplying it with the last transformation. 
+    for i in range(len(d)):
+        # 1. Compute the DH transformation matrix.
+        T_DH = DH(d[i], theta[i], a[i], alpha[i])
+        # 2. Compute the resulting accumulated transformation from the base frame.
+        cum_T = T[-1] @ T_DH # T[-1] is the last transformation in the chain
+        # 3. Append the computed transformation to T.
+        T.append(cum_T)
     return T
 
 # Inverse kinematics
@@ -84,31 +68,36 @@ def jacobian(T, revolute):
         (Numpy array): end-effector Jacobian
     '''
     # 1. Initialize J and O.
-    # 2. For each joint of the robot
-    #   a. Extract z and o.
-    #   b. Check joint type.
-    #   c. Modify corresponding column of J.
-    J = []
-    O_n = T[-1][:3,-1]  # points of last transform
-    for Ti,rev_flag in zip(T,revolute):
-        Ri = Ti[:3,:3]  #Rotation matrix 3x3 matrix 
-        Oi = Ti[:3,-1] #Origin vector
-        zi = Ri[:3,-1]  #z-vector
-        J.append(np.vstack([(np.cross(rev_flag*zi,(O_n-Oi)) +
-                                           (1-rev_flag)*zi).reshape(3,1),(rev_flag*zi).reshape(3,1)]))
-        # For revolute joints (rev_flag=1): 
-        #   J_i =[ [ z_i x (O_n - O_i) ],
-        #         [       z_i         ]]
-        # For prismatic joints (rev_flag=0):
-        #   J_i =[ [ z_i ],
-        #         [ 0 ]]
-    J = np.hstack(J) #stacking jacobians
+    #initializing the jacobian
+    J = np.zeros((6, len(T)-1)) #len(T) =number of joints
 
+    #storing the final transformation from the base to the end-effector T[-1]
+    T_n = T[-1]
+
+    #
+    O_n = T_n[:3, 3]
+    
+    # 2. For each joint of the robot
+    for i in range(len(T)-1):
+        
+    #   a. Extract z and o.
+        #z_i
+        z_i = T[i][:3, 2] #
+        #o_i
+        O_i = T[i][:3, 3]
+    #   b. Check joint type.
+        # making a flag for the type of join
+        rol=1 if revolute[i] else 0
+    #   c. Modify corresponding column of J.
+        #computing the linear jacobian 
+        J[:3, i] = rol*np.cross(z_i, (O_n - O_i)) + (1 - rol) * z_i
+        #computin the angulr jacobian
+        J[3:, i] = rol*z_i
     return J
 
 
 # Damped Least-Squares
-def DLS(A, damping):
+def DLS(A, damping, W=1):   # Modified DLS to include wieghts
     '''
         Function computes the damped least-squares (DLS) solution to the matrix inverse problem.
 
@@ -118,13 +107,13 @@ def DLS(A, damping):
 
         Returns:
         (Numpy array): inversion of the input matrix
-    ''' 
-    # A_dls = A^T * (A*A^T + λ^2*I)^(-1)
-    # DLS = A.T@np.linalg.inv(A@A.T+(damping**2)*np.identity(2)) 
-    A_mult = A@A.T
-    DLS = A.T @ np.linalg.inv(A_mult + (damping**2 * np.eye((A @ A.T).shape[0])))
+    '''
 
-    return DLS # Implement the formula to compute the DLS of matrix A.
+    if isinstance(W, int):
+        W = np.eye(A.shape[1])
+    Winv = np.linalg.inv(W)
+    return Winv @ A.T @ np.linalg.inv(A @ Winv @ A.T + (damping**2) * np.eye(A.shape[0]))
+
 
 # Extract characteristic points of a robot projected on X-Y plane
 def robotPoints2D(T):

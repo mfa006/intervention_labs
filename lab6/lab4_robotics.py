@@ -70,7 +70,7 @@ class Manipulator:
         return self.T[-1]
 
     def getJointPos(self, joint):
-        return self.q[joint,0]
+        return self.q[joint, 2]
 
     def getDOF(self):
         return self.dof
@@ -92,6 +92,9 @@ class Task:
         self.FeedForwardVelocity = np.zeros_like(desired)  
         self.K = K #np.eye(len(desired)) 
         self.active = True 
+        #
+        self.pos_error_norm = []
+        self.ori_error_norm = []
 
     def update(self, robot):
         pass
@@ -209,40 +212,35 @@ class Orientation2D(Task):
 
 class Configuration2D(Task):
     # exercise 1
-    # def __init__(self, name, desired, robot):  # initialize task
-    #     super().__init__(name, desired)
-    #     self.num_joints = robot.getDOF()  # number of joints
-    #     self.J = np.zeros((len(desired), self.num_joints))  # initialize jacobian
-    #     self.err = np.zeros((len(desired), 1))  # initialize error
-
-    # exercise 2
-    def __init__(self, name, desired, robot, link):  # with link index
+    def __init__(self, name, desired, robot):  # initialize task
         super().__init__(name, desired)
         self.num_joints = robot.getDOF()  # number of joints
-        self.J = np.zeros((len(desired), self.num_joints))  # initialize Jacobian
-        self.FFVelocity = np.zeros_like(desired)  # initialize feedforward velocity
+        self.J = np.zeros((len(desired), self.num_joints))  # initialize jacobian
+        self.err = np.zeros((len(desired), 1))  # initialize error
         self.K = np.eye(len(desired))  # initialize gain matrix
-        self.link = link  # store selected link index
-        self.err = np.zeros((len(desired),1))  # initialize error
+
+
 
     def update(self, robot):
         # exercise 1
-        # self.J[:len(self.sigma_d)-1, :] = robot.getEEJacobian()[:len(self.sigma_d)-1, :]  # position jacobian
-        # self.J[2, :] = robot.getEEJacobian()[-1, :]  # orientation jacobian
-        # position = robot.getEETransform()[:2, -1].reshape(2,1)  # end-effector position
-        # orientation = np.array([[np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0])]])  # end-effector angle 
-        # sigma = np.vstack([position, orientation])  # combine position and orientation
-        # self.err = self.getDesired() - sigma  # compute error
-        # self.error_norm.append(np.linalg.norm(self.err))  # store error norm
-
-        # exercise 2
-        self.J[:len(self.sigma_d)-1, :] = robot.getLinkJacobian(self.link)[:len(self.sigma_d)-1, :]  # update position Jacobian
-        self.J[-1, :] = robot.getLinkJacobian(self.link)[-1, :]  # update orientation Jacobian
-        position = robot.getLinkTransformation(self.link)[:2, -1].reshape(2,1)  # extract position
-        orientation = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])  # extract orientation
+        self.J[:len(self.sigma_d)-1, :] = robot.getEEJacobian()[:len(self.sigma_d)-1, :]  # position jacobian
+        self.J[2, :] = robot.getEEJacobian()[-1, :]  # orientation jacobian
+        position = robot.getEETransform()[:2, -1].reshape(2,1)  # end-effector position
+        orientation = np.array([[np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0])]])  # end-effector angle 
         sigma = np.vstack([position, orientation])  # combine position and orientation
-        self.err = self.getDesired() - sigma  # compute full configuration error
-        self.error_norm.append(np.linalg.norm(self.err))  # store error norm
+        self.err = self.getDesired() - sigma  # compute error
+
+        # store norms separately
+        pos_err = self.err[0:2]  # x, y error
+        ori_err = self.err[2]    # θ error
+
+        self.pos_error_norm.append(np.linalg.norm(pos_err))
+        self.ori_error_norm.append(np.abs(ori_err))
+        # self.error_norm.append(np.linalg.norm(self.err))  # store error norm
+    
+    def isActive(self):
+        return True
+
 
 ''' 
     Subclass of Task, representing the joint position task.
@@ -302,12 +300,13 @@ class Obstacle2D(Task):
         self.error_norm.append(err_norm_diff)
 
 class JointLimits(Task):
-    def __init__(self, name, joint_limits, activation_margin, robot):
+    def __init__(self, name, joint_limits, activation_margin, joint_num, robot):
         super().__init__(name, 0)
         self.joint_limits = joint_limits  # [lower_limit, upper_limit]
         self.activation_margin = activation_margin  # [activation, deactivation]
         self.num_joints = robot.getDOF()
         self.J = np.zeros((1, self.num_joints))  # jacobian matrix for a single joint task
+        self.joint_num = joint_num
         self.err = np.zeros((1, 1))  # error vector
         self.active = 0  # State: -1 (upper limit), 0 (inactive), 1 (lower limit)
     
@@ -317,12 +316,12 @@ class JointLimits(Task):
     def update(self, robot):
     
         self.J.fill(0)
-        self.J[0, 0] = 1 #for joint 1
+        self.J[0, self.joint_num] = 1 #for joint 1
         
         self.err[0, 0] = self.active #erro update based on the activation state
         
         # Get current position and thresholds
-        joint_pos = robot.getJointPos(0) #current joint position
+        joint_pos = robot.getJointPos(self.joint_num) #current joint position
         lower, upper = self.joint_limits # joint limits
         act_margin, deact_margin = self.activation_margin # activation thresholds
 
