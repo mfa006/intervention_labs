@@ -6,8 +6,7 @@ import matplotlib.transforms as trans
 
 # Robot model
 d =  np.zeros(3)                           # displacement along Z-axis
-theta = np.array([0.2, 0.5, 0.2])
-# theta =  np.array([0, np.pi/4, np.pi/4])                       # rotation around Z-axis
+theta =  np.array([0.2, 0.5, 0.25])                       # rotation around Z-axis
 alpha =  np.zeros(3)                       # rotation around X-axis
 a =  np.array([0.5, 0.75, 0.5])                           # displacement along X-axis
 revolute = [True, True, True]                     # flags specifying the type of joints
@@ -20,9 +19,7 @@ robot = MobileManipulator(d, theta, a, alpha, revolute)
 # weights:          "none", "joints", "base", "moderate"
 # navigate:         "none", "rotate_move", "move_rotate", "move_and_rotate"
 
-
-
-config = "ex3_rotmove" # choose one of: "ex1", "ex2_base", "ex2_joints", "ex2_moderate", "ex3_rotmove", "ex3_moverot", "ex3_both"
+config = "ex1" # choose one of: "ex1", "ex2_base", "ex2_joints", "ex2_moderate", "ex3_rotmove", "ex3_moverot", "ex3_both"
 
 # === Define presets for all configurations ===
 preset_configs = {
@@ -58,6 +55,13 @@ elif task_mode in ["exercise 2", "exercise 3"]:
         Configuration2D("End-effector configuration", np.array([1.0, 0.5, 0]).reshape(3, 1), robot)
     ]
 
+task_mode = "exercise 1"
+DLS_Weighted = False
+tasks = [
+    JointLimits("Joint limits", np.array([-0.5, 0.2]), np.array([0.03, 0.05]), 2, robot),
+    Position2D("End-effector position", np.array([1.0, 0.5]).reshape(2, 1), robot)
+]
+
 # deterministic targets for reproducible evaluation
 config_targets = [
     np.array([1.5, 0.0, 0.0]).reshape(3, 1),          # straight forward
@@ -67,25 +71,6 @@ config_targets = [
     np.array([0.0, -1.5, -np.pi/2]).reshape(3, 1),    # rotate right, move down
     np.array([0.0, -1.0, -np.pi/2]).reshape(3, 1)     # straight downward
 ]
-# config_targets = [
-#     np.array([1.5, 0.0, 0.0]).reshape(3, 1),          # straight forward
-#     np.array([0.0, 1.5, np.pi/2]).reshape(3, 1),      # rotate left, move up
-#     np.array([1.5, 1.5, np.pi/4]).reshape(3, 1),      # arc motion
-#     np.array([-1.0, -1.5, np.pi]).reshape(3, 1),      # turn around and move
-#     np.array([0.5, -1.5, -np.pi/2]).reshape(3, 1),    # sharp right and move
-#     np.array([-1.2, 1.0, np.pi/3]).reshape(3, 1),     # reverse arc left
-#     np.array([1.2, -1.2, -np.pi/3]).reshape(3, 1),    # reverse arc right
-#     np.array([0.0, 0.0, 0.0]).reshape(3, 1),          # return to origin
-#     np.array([1.8, 0.0, 0.0]).reshape(3, 1),          # long forward
-#     np.array([0.0, -1.8, -np.pi/2]).reshape(3, 1),    # rotate right, move down
-#     np.array([-1.5, 1.5, 3*np.pi/4]).reshape(3, 1),   # diagonal up left
-#     np.array([1.5, -1.5, -3*np.pi/4]).reshape(3, 1),  # diagonal down right
-#     np.array([1.0, 1.0, 0.0]).reshape(3, 1),          # small arc
-#     np.array([-1.0, 0.0, np.pi]).reshape(3, 1),       # rotate 180 and back
-#     np.array([0.0, -1.0, -np.pi/2]).reshape(3, 1)     # straight downward
-# ]
-
-
 
 # Simulation params
 if task_mode=="exercise 3":
@@ -145,8 +130,6 @@ def init():
     else:
         last_log = 0
     return line, path, point
-
-
 
 # Simulation loop
 def simulate(t):
@@ -226,7 +209,6 @@ def simulate(t):
     ee_x.append(ee_transform[0, 3])
     ee_y.append(ee_transform[1, 3])
     
-
     # Log time
     time_vector.append(t + last_log)
 
@@ -302,6 +284,3 @@ elif task_mode == "exercise 3":
         np.save('base_trajectory_nav3.npy', [ee_array, base_array])
 
     plt.show()
-
-    
-

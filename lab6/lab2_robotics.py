@@ -23,8 +23,6 @@ def DH(d, theta, a, alpha):
                    [0, 0, 0, 1]])
     return T
 
-
-
 # 5) Modification of the kinematics() function, to be able to pass the base transformation as a parameter.
 
 def kinematics(d, theta, a, alpha, Tb=np.eye(4)):

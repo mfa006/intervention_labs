@@ -127,13 +127,9 @@ class Task:
     def isActive(self):
         return self.active
 
-
-
 '''
     Subclass of Task, representing the 2D position task.
 '''
-
-
 class Position2D(Task):
     #for exercise 1
     def __init__(self, name, desired, robot): # constructor with task name, desired state, and robot
@@ -141,16 +137,6 @@ class Position2D(Task):
         num_joints = robot.getDOF() # number of joints
         self.J = np.zeros((len(desired), num_joints)) # Initialize Jacobian
         self.err = np.zeros((len(desired), 1)) # Initialize error
-    
-    # #for exercise 2
-    # def __init__(self, name, desired, robot, link):  # include link index
-    #     super().__init__(name, desired)
-    #     num_joints = robot.getDOF()  # number of joints
-    #     self.J = np.zeros((len(desired), num_joints))  # initialize Jacobian
-    #     self.err = np.zeros_like(desired)  # initialize error
-    #     self.link = link  # store selected link index
-    #     self.FFVelocity = np.zeros_like(desired)  # initialize feedforward velocity
-    #     self.K = np.eye(len(desired))  # initialize gain matrix
         
     def update(self, robot):
         # exercise 1
@@ -161,16 +147,7 @@ class Position2D(Task):
     
     # 4)Augmentation of the base Task class to include checking if task is active
     def isActive(self):
-        return True
-
-        # exercise 2
-        # self.J = robot.getLinkJacobian(self.link)[:len(self.sigma_d), :]  # update Jacobian
-        # sigma = robot.getLinkTransformation(self.link)[:len(self.sigma_d), 3].reshape(len(self.sigma_d), 1)  # link position
-        # self.err = self.getDesired() - sigma  # compute task error
-        # self.error_norm.append(np.linalg.norm(self.err))  # store error norm
-
-
-         
+        return True         
 '''
     Subclass of Task, representing the 2D orientation task.
 '''
@@ -182,15 +159,6 @@ class Orientation2D(Task):
         self.num_joints = robot.getDOF() # number of joints
         self.J = np.zeros((len(desired), self.num_joints)) # initialize jacobian
         self.err = np.array([0]) # initialize error
-
-    # exercise 2
-    # def __init__(self, name, desired, robot, link):  # with link index
-    #     super().__init__(name, desired)
-    #     self.num_joints = robot.getDOF()  # number of joints
-    #     self.J = np.zeros((len(desired), self.num_joints))  # initialize Jacobian
-        # self.FFVelocity = np.zeros_like(desired)  # initialize feedforward velocity
-    #     self.K = np.eye(len(desired))  # initialize gain matrix
-    #     self.link = link  # store selected link index
         
     def update(self, robot):       
         # exercise 1
@@ -198,12 +166,6 @@ class Orientation2D(Task):
         angle = np.arctan2(robot.getEETransform()[1, 0], robot.getEETransform()[0, 0]) # compute orientation
         self.err = self.getDesired() - angle # task error
         self.error_norm.append(np.linalg.norm(self.err)) # store error norm
-
-        # exercise 2
-        # self.J = robot.getLinkJacobian(self.link)[-1, :].reshape((len(self.sigma_d), self.num_joints))  # update Jacobian
-        # angle = np.arctan2(robot.getLinkTransformation(self.link)[1, 0], robot.getLinkTransformation(self.link)[0, 0])  # compute orientation
-        # self.err = self.getDesired() - angle  # compute orientation error
-        # self.error_norm.append(np.linalg.norm(self.err))  # store error norm
 
 
 '''
@@ -345,5 +307,3 @@ class JointLimits(Task):
             # Check lower deactivation threshold
             if joint_pos >= lower + deact_margin:
                 self.active = 0   # deactivate lower limit 
-
-
